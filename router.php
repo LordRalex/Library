@@ -7,7 +7,7 @@ session_start();
 $klein = new \Klein\Klein();
 
 $klein->respond('GET', '/?[index|home:page]?', function($request, $response, $service, $app) {
-    $service->render('index.phtml');
+    $service->render('home.phtml');
 });
 
 $klein->dispatch();
