@@ -33,22 +33,30 @@ $klein->respond('POST', '/login', function($request, $response, $service, $app) 
     try {
         $service->validateParam('email', 'Please enter a valid eamail')->isLen(5, 256);
         $service->validateParam('password', 'Please enter a password')->isLen(1, 256);
-        $statement = $app->librarydb->prepare("SELECT uuid,password FROM user WHERE email=?");
+        $statement = $app->librarydb->prepare("SELECT uuid,password,email FROM user WHERE email=?");
         $statement->execute(array($request->param("email")));
         $statement->setFetchMode(PDO::FETCH_ASSOC);
         $db = $statement->fetch();
 
-        if (!isset($db['password']) || !isset($db['uuid']) || !password_verify($request->param('password'), $db['password'])) {
+        if (!isset($db['password']) || !isset($db['uuid']) || !isset($db['email']) || !password_verify($request->param('password'), $db['password'])) {
             $service->flash('The given email and password is incorrect');
             $response->redirect('/login', 302);
             return;
         }
+        $_SESSION['email'] = $db['email'];
+        $_SESSION['password'] = $db['password'];
         $response->redirect('/', 302);
     } catch (Exception $e) {
         $service->flash('Error: ' . $e->getMessage());
         $response->redirect('/login', 302);
         return;
     }
+});
+
+$klein->respond('GET', '/logout', function($request, $response, $service, $app) {
+    $_SESSION['password'] = null;
+    $_SESSION['email'] = null;
+    $response->redirect('/', 302);
 });
 
 $klein->dispatch();
