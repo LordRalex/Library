@@ -25,6 +25,10 @@ $klein->respond('GET', '/?[index|home:page]?', function($request, $response, $se
     $service->render('home.phtml');
 });
 
+$klein->respond('GET', '/search', function($request, $response, $service, $app) {
+    $service->render('search.phtml');
+});
+
 $klein->respond('GET', '/login', function($request, $response, $service, $app) {
     $service->render('login.phtml');
 });
