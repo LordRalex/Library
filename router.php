@@ -63,4 +63,7 @@ $klein->respond('GET', '/logout', function($request, $response, $service, $app) 
     $response->redirect('/', 302);
 });
 
+$klein->respond('POST', '/search', function($request, $response, $service, $app) {
+});
+
 $klein->dispatch();
