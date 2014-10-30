@@ -64,6 +64,34 @@ $klein->respond('GET', '/logout', function($request, $response, $service, $app) 
 });
 
 $klein->respond('POST', '/search', function($request, $response, $service, $app) {
+     $database = $app->librarydb;
+    try {
+        switch ($request->param("type")) {
+            case "author":
+                $statement = $database->prepare("SELECT title, book.desc, book.isbn FROM book "
+                        . "INNER JOIN bookauthor ON bookauthor.isbn = book.isbn "
+                        . "WHERE author LIKE ?");
+                    break;
+                
+            case "isbn":
+                $statement = $database->prepare("SELECT title, book.desc, book.isbn FROM book "
+                        . "INNER JOIN bookauthor ON bookauthor.isbn = book.isbn "
+                        . "WHERE book.isbn = ?");
+                    break;
+                
+            case "title":
+                $statement = $database->prepare("SELECT title, book.desc, book.isbn FROM book "
+                        . "INNER JOIN bookauthor ON bookauthor.isbn = book.isbn "
+                        . "WHERE title LIKE ?");
+                    break;            
+        }
+         $statement->execute(array(0=>$request->param("query")));
+         $factoids = $statement->fetchALL(PDO::FETCH_ASSOC);
+         echo var_dump($factoids);
+         
+    } catch (PDOException $ex) {
+        echo var_dump($ex);
+    }
 });
 
 $klein->dispatch();
