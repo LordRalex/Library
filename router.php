@@ -64,33 +64,48 @@ $klein->respond('GET', '/logout', function($request, $response, $service, $app) 
 });
 
 $klein->respond('POST', '/search', function($request, $response, $service, $app) {
-     $database = $app->librarydb;
+    if ($request->param("type") === null) {
+        echo json_encode(array("msg" => "failed", "error" => "No search type provided"));
+        return;
+    }
+    if ($request->param("query") === null) {
+        echo json_encode(array("msg" => "failed", "error" => "No search arguments provided"));
+        return;
+    }
     try {
+        $database = $app->librarydb;
         switch ($request->param("type")) {
             case "author":
                 $statement = $database->prepare("SELECT title, book.desc, book.isbn FROM book "
                         . "INNER JOIN bookauthor ON bookauthor.isbn = book.isbn "
-                        . "WHERE author LIKE ?");
-                    break;
-                
+                        . "WHERE author LIKE ?"
+                        . "LIMIT 30");
+                break;
+
             case "isbn":
                 $statement = $database->prepare("SELECT title, book.desc, book.isbn FROM book "
                         . "INNER JOIN bookauthor ON bookauthor.isbn = book.isbn "
-                        . "WHERE book.isbn = ?");
-                    break;
-                
+                        . "WHERE book.isbn = ?"
+                        . "LIMIT 30");
+                break;
+
             case "title":
                 $statement = $database->prepare("SELECT title, book.desc, book.isbn FROM book "
                         . "INNER JOIN bookauthor ON bookauthor.isbn = book.isbn "
-                        . "WHERE title LIKE ?");
-                    break;            
+                        . "WHERE title LIKE ? "
+                        . "LIMIT 30");
+                break;
+
+            default:
+                echo json_encode(array("msg" => "failed", "error" => "Invalid search type"));
+                return;
         }
-         $statement->execute(array(0=>$request->param("query")));
-         $factoids = $statement->fetchALL(PDO::FETCH_ASSOC);
-         echo var_dump($factoids);
-         
+        $statement->execute(array(0 => $request->param("query")));
+        $books = $statement->fetchALL(PDO::FETCH_ASSOC);
+        echo json_encode(array("msg" => "success", "data" => $books));
     } catch (PDOException $ex) {
-        echo var_dump($ex);
+        error_log($ex);
+        echo json_encode(array("msg" => "failed", "error" => "Database returned an error"));
     }
 });
 
