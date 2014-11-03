@@ -38,7 +38,12 @@
                 <h3>Search for any book, author, genre or ISBN number</h3>
                 <p class="lead"></p>
                 <form style="width: 80%" name="edit" action="/search" method="post" accept-charset="UTF-8">
-                    <select name="type" id="type" > <option value="author">Author</option></select>
+                    <select name="type" id="type" >
+                        <option value="author">Author</option>
+                        <option value="isbn">ISBN</option>
+                        <option value="title">Title</option>
+                        
+                    </select>
                     <input name = "query" id = "query" type = "text" class = "form-control" placeholder = "" required autofocus maxlength="256">
                     <h1></h1>
                    <button class = "btn btn-xs" type = "submit">Search</button>
