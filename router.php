@@ -80,6 +80,7 @@ $klein->respond('POST', '/search', function($request, $response, $service, $app)
                         . "INNER JOIN bookauthor ON bookauthor.isbn = book.isbn "
                         . "WHERE author LIKE ?"
                         . "LIMIT 30");
+                $statement->execute(array(0 => "%" . $request->param("query") . "%"));
                 break;
 
             case "isbn":
@@ -87,6 +88,7 @@ $klein->respond('POST', '/search', function($request, $response, $service, $app)
                         . "INNER JOIN bookauthor ON bookauthor.isbn = book.isbn "
                         . "WHERE book.isbn = ?"
                         . "LIMIT 30");
+                $statement->execute(array(0 => $request->param("query")));
                 break;
 
             case "title":
@@ -94,13 +96,13 @@ $klein->respond('POST', '/search', function($request, $response, $service, $app)
                         . "INNER JOIN bookauthor ON bookauthor.isbn = book.isbn "
                         . "WHERE title LIKE ? "
                         . "LIMIT 30");
+                $statement->execute(array(0 => "%" . $request->param("query") . "%"));
                 break;
 
             default:
                 echo json_encode(array("msg" => "failed", "error" => "Invalid search type"));
                 return;
-        }
-        $statement->execute(array(0 => $request->param("query")));
+        }        
         $books = $statement->fetchALL(PDO::FETCH_ASSOC);
         echo json_encode(array("msg" => "success", "data" => $books));
     } catch (PDOException $ex) {
