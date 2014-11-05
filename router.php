@@ -47,8 +47,10 @@ $klein->respond('POST', '/login', function($request, $response, $service, $app) 
             $response->redirect('/login', 302);
             return;
         }
-        $_SESSION['email'] = $db['email'];
-        $_SESSION['password'] = $db['password'];
+        $session = generate_random_string(32);
+        $response->cookie('session', $session);
+        $response->cookie('email', $db['email']);
+        $app->librarydb->prepare("UPDATE user SET session = ? WHERE email = ?")->execute(array(0 => $session, 1 => $db['email']));
         $response->redirect('/', 302);
     } catch (Exception $e) {
         $service->flash('Error: ' . $e->getMessage());
@@ -58,8 +60,10 @@ $klein->respond('POST', '/login', function($request, $response, $service, $app) 
 });
 
 $klein->respond('GET', '/logout', function($request, $response, $service, $app) {
-    $_SESSION['password'] = null;
-    $_SESSION['email'] = null;
+    $email = $request->cookies()['email'];
+    $response->cookie('session', null);
+    $response->cookie('email', null);
+    $app->librarydb->prepare("UPDATE user SET session = NULL WHERE email = ?")->execute(array(0 => $email));
     $response->redirect('/', 302);
 });
 
@@ -102,7 +106,7 @@ $klein->respond('POST', '/search', function($request, $response, $service, $app)
             default:
                 echo json_encode(array("msg" => "failed", "error" => "Invalid search type"));
                 return;
-        }        
+        }
         $books = $statement->fetchALL(PDO::FETCH_ASSOC);
         echo json_encode(array("msg" => "success", "data" => $books));
     } catch (PDOException $ex) {
@@ -112,3 +116,17 @@ $klein->respond('POST', '/search', function($request, $response, $service, $app)
 });
 
 $klein->dispatch();
+
+function generate_random_string($length) {
+    $charset = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    $str = '';
+    $count = strlen($charset);
+    for ($i = 0; $i < $length; $i++) {
+        $str .= $charset[mt_rand(0, $count - 1)];
+    }
+    return $str;
+}
+
+function isLoggedIn() {
+    return isset($_COOKIE['session']);
+}

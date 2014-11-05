@@ -35,7 +35,13 @@
                     <li class="active"><a href="/search">Search</a></li>
                     <li><a href="#">About</a></li>
                     <li><a href="#">Contact</a></li>
-                    <li><a href="/login">Login</a></li>
+                    <?php
+                    if (isLoggedIn()) {
+                        echo '<li><a href="/logout">Logout</a></li>';
+                    } else {
+                        echo '<li><a href="/login">Login</a></li>';
+                    }
+                    ?>
                 </ul>
             </div>
 
@@ -55,7 +61,6 @@
                 <div  class="jumbotron">
                     <button class="btn btn-success" id="searchButton">Search</button>
                 </div>
-                <p></p>
             </div>
 
             <div class="row">
