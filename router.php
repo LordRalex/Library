@@ -20,19 +20,6 @@ $klein->respond(function($request, $response, $service, $app) {
     });
 });
 
-
-$klein->respond('GET', '/?[index|home:page]?', function($request, $response, $service, $app) {
-    $service->render('home.phtml');
-});
-
-$klein->respond('GET', '/search', function($request, $response, $service, $app) {
-    $service->render('search.phtml');
-});
-
-$klein->respond('GET', '/login', function($request, $response, $service, $app) {
-    $service->render('login.phtml');
-});
-
 $klein->respond('POST', '/login', function($request, $response, $service, $app) {
     try {
         $service->validateParam('email', 'Please enter a valid eamail')->isLen(5, 256);
@@ -60,6 +47,7 @@ $klein->respond('POST', '/login', function($request, $response, $service, $app) 
 });
 
 $klein->respond('GET', '/logout', function($request, $response, $service, $app) {
+    //TODO: Improve security of logout
     $email = $request->cookies()['email'];
     $response->cookie('session', null);
     $response->cookie('email', null);
@@ -114,6 +102,19 @@ $klein->respond('POST', '/search', function($request, $response, $service, $app)
         echo json_encode(array("msg" => "failed", "error" => "Database returned an error"));
     }
 });
+
+$klein->respond('GET', '/', function($request, $response, $service, $app) {
+    $service->render("home.phtml");
+});
+
+$klein->respond('GET', '/[a:page]', function ($request, $response, $service, $app) {
+    $page = $request->param('page');
+    if ($page === null || $page === "logout") {
+        $page = "home";
+    }
+    $service->render($page . ".phtml");
+});
+
 
 $klein->dispatch();
 
