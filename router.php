@@ -68,26 +68,23 @@ $klein->respond('POST', '/search', function($request, $response, $service, $app)
         $database = $app->librarydb;
         switch ($request->param("type")) {
             case "author":
-                $statement = $database->prepare("SELECT title, book.desc, book.isbn FROM book "
-                        . "INNER JOIN bookauthor ON bookauthor.isbn = book.isbn "
-                        . "WHERE author LIKE ?"
-                        . "LIMIT 30");
+                $statement = $database->prepare("SELECT title, book.desc, isbn, author FROM book "
+                      . "WHERE author LIKE ?"
+                      . "LIMIT 30");
                 $statement->execute(array(0 => "%" . $request->param("query") . "%"));
                 break;
 
             case "isbn":
-                $statement = $database->prepare("SELECT title, book.desc, book.isbn FROM book "
-                        . "INNER JOIN bookauthor ON bookauthor.isbn = book.isbn "
-                        . "WHERE book.isbn = ?"
-                        . "LIMIT 30");
+                $statement = $database->prepare("SELECT title, book.desc, isbn, author FROM book "
+                      . "WHERE book.isbn = ?"
+                      . "LIMIT 30");
                 $statement->execute(array(0 => $request->param("query")));
                 break;
 
             case "title":
-                $statement = $database->prepare("SELECT title, book.desc, book.isbn FROM book "
-                        . "INNER JOIN bookauthor ON bookauthor.isbn = book.isbn "
-                        . "WHERE title LIKE ? "
-                        . "LIMIT 30");
+                $statement = $database->prepare("SELECT title, book.desc, isbn, author FROM book "
+                      . "WHERE title LIKE ? "
+                      . "LIMIT 30");
                 $statement->execute(array(0 => "%" . $request->param("query") . "%"));
                 break;
 
@@ -99,7 +96,7 @@ $klein->respond('POST', '/search', function($request, $response, $service, $app)
         echo json_encode(array("msg" => "success", "data" => $books));
     } catch (PDOException $ex) {
         error_log($ex);
-        echo json_encode(array("msg" => "failed", "error" => "Database returned an error"));
+        echo json_encode(array("msg" => "failed", "error" => "Database returned an error", "stack" => $ex));
     }
 });
 

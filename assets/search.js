@@ -12,7 +12,9 @@ function parseData(data) {
             viewModel.bookTable.push({
                 'title': book.title,
                 'isbn': book.isbn,
-                'desc': book.desc});
+                'desc': book.desc,
+                'author': book.author
+            });
         }
     }
     viewModel.tableLoaded(true);
