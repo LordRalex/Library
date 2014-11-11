@@ -31,15 +31,16 @@ $klein->respond('GET', '/logout', function($request, $response, $service, $app) 
 });
 
 $klein->respond('GET', '/', function($request, $response, $service, $app) {
-    $service->render("home.phtml");
+    $service->render("home.phtml", array('randomBook' => randBook($app)));
 });
 
 $klein->respond('GET', '/[a:page]', function ($request, $response, $service, $app) {
     $page = $request->param('page');
-    if ($page === null || $page === "logout") {
-        $page = "home";
-    }
+    if ($page === null || $page === 'home' || $page === "logout") {
+        $service->render("home.phtml", array('randomBook' => randBook($app)));
+    }else{
     $service->render($page . ".phtml");
+    }
 });
 
 $klein->respond('POST', '/login', function($request, $response, $service, $app) {
@@ -84,21 +85,21 @@ $klein->respond('POST', '/search', function($request, $response, $service, $app)
         $database = $app->librarydb;
         switch ($request->param("type")) {
             case "author":
-                $statement = $database->prepare("SELECT title, book.desc, isbn, author FROM book "
+                $statement = $database->prepare("SELECT DISTINCT title, book.desc, isbn, author FROM book "
                       . "WHERE author LIKE ?"
                       . "LIMIT 30");
                 $statement->execute(array(0 => "%" . $request->param("query") . "%"));
                 break;
 
             case "isbn":
-                $statement = $database->prepare("SELECT title, book.desc, isbn, author FROM book "
+                $statement = $database->prepare("SELECT DISTINCT title, book.desc, isbn, author FROM book "
                       . "WHERE book.isbn = ?"
                       . "LIMIT 30");
                 $statement->execute(array(0 => $request->param("query")));
                 break;
 
             case "title":
-                $statement = $database->prepare("SELECT title, book.desc, isbn, author FROM book "
+                $statement = $database->prepare("SELECT DISTINCT title, book.desc, isbn, author FROM book "
                       . "WHERE title LIKE ? "
                       . "LIMIT 30");
                 $statement->execute(array(0 => "%" . $request->param("query") . "%"));
@@ -162,4 +163,15 @@ function generate_random_string($length) {
 
 function isLoggedIn() {
     return isset($_COOKIE['session']);
+}
+
+function randBook($app) {
+    $database = $app->librarydb;
+    $statement = $database->prepare("SELECT DISTINCT isbn FROM book");
+    $statement->execute();
+    $books = $statement->fetchALL(PDO::FETCH_ASSOC);
+    $randBook = $database->prepare("SELECT title, author, book.desc FROM book "
+            . "WHERE isbn = ?");
+    $randBook->execute(array(0 => $books[mt_rand(0, count($books)-1)]['isbn']));
+    return $randBook->fetchALL(PDO::FETCH_ASSOC);
 }
