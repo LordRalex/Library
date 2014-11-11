@@ -1,6 +1,7 @@
 <?php
 
-require_once __DIR__ . '/assets/php/composer/vendor/autoload.php';
+require_once __DIR__ . '/vendor/autoload.php';
+require_once __DIR__ . '/config.php';
 
 session_start();
 
@@ -18,6 +19,27 @@ $klein->respond(function($request, $response, $service, $app) {
         $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
         return $db;
     });
+});
+
+$klein->respond('GET', '/logout', function($request, $response, $service, $app) {
+    //TODO: Improve security of logout
+    $email = $request->cookies()['email'];
+    $response->cookie('session', null);
+    $response->cookie('email', null);
+    $app->librarydb->prepare("UPDATE user SET session = NULL WHERE email = ?")->execute(array(0 => $email));
+    $response->redirect('/', 302);
+});
+
+$klein->respond('GET', '/', function($request, $response, $service, $app) {
+    $service->render("home.phtml");
+});
+
+$klein->respond('GET', '/[a:page]', function ($request, $response, $service, $app) {
+    $page = $request->param('page');
+    if ($page === null || $page === "logout") {
+        $page = "home";
+    }
+    $service->render($page . ".phtml");
 });
 
 $klein->respond('POST', '/login', function($request, $response, $service, $app) {
@@ -40,19 +62,13 @@ $klein->respond('POST', '/login', function($request, $response, $service, $app) 
         $app->librarydb->prepare("UPDATE user SET session = ? WHERE email = ?")->execute(array(0 => $session, 1 => $db['email']));
         $response->redirect('/', 302);
     } catch (Exception $e) {
+        if ($e instanceof PDOException) {
+            error_log($e);
+        }
         $service->flash('Error: ' . $e->getMessage());
         $response->redirect('/login', 302);
         return;
     }
-});
-
-$klein->respond('GET', '/logout', function($request, $response, $service, $app) {
-    //TODO: Improve security of logout
-    $email = $request->cookies()['email'];
-    $response->cookie('session', null);
-    $response->cookie('email', null);
-    $app->librarydb->prepare("UPDATE user SET session = NULL WHERE email = ?")->execute(array(0 => $email));
-    $response->redirect('/', 302);
 });
 
 $klein->respond('POST', '/search', function($request, $response, $service, $app) {
@@ -96,20 +112,39 @@ $klein->respond('POST', '/search', function($request, $response, $service, $app)
         echo json_encode(array("msg" => "success", "data" => $books));
     } catch (PDOException $ex) {
         error_log($ex);
-        echo json_encode(array("msg" => "failed", "error" => "Database returned an error", "stack" => $ex));
+        echo json_encode(array("msg" => "failed", "error" => "Database returned an error"));
     }
 });
 
-$klein->respond('GET', '/', function($request, $response, $service, $app) {
-    $service->render("home.phtml");
-});
+$klein->respond('POST', '/resetpassword', function($request, $response, $service, $app) {
+    try {
+        $key = generate_random_string(32);
+        $db = $app->librarydb;
+        $statement = $db->prepare("SELECT uuid FROM user WHERE email = ? LIMIT 1");
+        $statement->execute(array($request->param('email')));
+        $uuid = $statement->fetchALL(PDO::FETCH_ASSOC);
+        if (count($uuid) === 1 && isset($uuid[0])) {
+            $id = $uuid[0]['uuid'];
+            $db->prepare("INSERT INTO passwordreset (userId, passphrase) VALUES (?,?) "
+                        . "ON DUPLICATE KEY UPDATE passphrase = ?")
+                  ->execute(array($id, $key, $key));
+            $mailgun = new \Mailgun\Mailgun(getMailgunKey());
+            $mailgun->sendMessage('ae97.net', array(
+               'from' => 'library@ae97.net',
+                'to' => $request->param('email'),
+                'subject' => 'Password Reset',
+                'html' => 'Someone recently requested a password reset for your account. '
+                . 'If this was your choice, then please click <a href="http://library.ae97.net/resetpassword?e='
+                . $request->param('email') . '&k=' . $key . '">this link</a> to complete the process'
+            ));
+        }
 
-$klein->respond('GET', '/[a:page]', function ($request, $response, $service, $app) {
-    $page = $request->param('page');
-    if ($page === null || $page === "logout") {
-        $page = "home";
+        $service->flash('Please check your email for a password reset link');
+    } catch (PDOException $ex) {
+        $service->flash("A database error occured");
+        error_log($ex);
     }
-    $service->render($page . ".phtml");
+    $response->redirect('/login', 302);
 });
 
 
