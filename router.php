@@ -33,21 +33,32 @@ $klein->respond('GET', '/logout', function($request, $response, $service, $app) 
 
 $klein->respond('GET', '/resetpw', function($request, $response, $service, $app) {
     try {
-        $request->validateParam('e', 'No email provided')->isEmail();
-        $request->validateParam('k', 'No reset key provided');
+        $service->validateParam('e', 'No email provided')->isEmail();
+        $service->validateParam('k', 'No reset key provided');
         $database = $app->librarydb;
         $statement = $database->prepare("SELECT passphrase AS k FROM passwordreset "
-              . "INNER JOIN user ON user.uuid = userId "
-              . "WHERE user.email = ?");
+                . "INNER JOIN user ON user.uuid = userId "
+                . "WHERE user.email = ?");
         $statement->execute(array(0 => $request->param('e')));
         $result = $statement->fetchAll(PDO::FETCH_ASSOC);
-        if ($result['k'] === $request->param('k')) {
+        if ($result[0]['k'] === $request->param('k')) {
             $database->prepare("DELETE FROM passwordreset "
-                        . "INNER JOIN user ON user.uuid = userId "
-                        . "WHERE user.email = ?")
-                  ->execute(array(0 => $request->param('e')));
+                            . "WHERE userId = (SELECT uuid FROM user WHERE user.email = ?)")
+                    ->execute(array(0 => $request->param('e')));
+            $newpw = generate_random_string(8);
+            $database->prepare('UPDATE user SET password = ? WHERE email = ?')
+                    ->execute(array(0 => password_hash($newpw, PASSWORD_BCRYPT), 1 => $request->param('e')));
+            $mailgun = new \Mailgun\Mailgun(getMailgunKey());
+            $mailgun->sendMessage('ae97.net', array(
+                'from' => 'library@ae97.net',
+                'to' => $request->param('e'),
+                'subject' => 'Password changed',
+                'html' => 'Your password has been changed<br>Your new password is: ' . $newpw
+            ));
+            $service->flash('Please check your email for your new password');
+            $response->redirect('/login', 302);
         } else {
-            $response->flash("Reset link not valid");
+            $service->flash("Reset link not valid");
             $response->redirect('/login', 302);
             return;
         }
@@ -69,7 +80,7 @@ $klein->respond('GET', '/[a:page]', function ($request, $response, $service, $ap
     $page = $request->param('page');
     if ($page === null || $page === 'home' || $page === "logout") {
         $service->render("home.phtml", array('randomBook' => randBook($app)));
-    } else {
+    } else if (file_exists($page . ".phtml")) {
         $service->render($page . ".phtml");
     }
 });
@@ -78,7 +89,7 @@ $klein->respond('POST', '/login', function($request, $response, $service, $app) 
     try {
         $service->validateParam('email', 'Please enter a valid email');
         $service->validateParam('password', 'Please enter a password');
-        $statement = $app->librarydb->prepare("SELECT uuid,password,email FROM user WHERE email=?");
+        $statement = $app->librarydb->prepare("SELECT uuid, password, email FROM user WHERE email = ?");
         $statement->execute(array($request->param("email")));
         $statement->setFetchMode(PDO::FETCH_ASSOC);
         $db = $statement->fetch();
@@ -117,22 +128,22 @@ $klein->respond('POST', '/search', function($request, $response, $service, $app)
         switch ($request->param("type")) {
             case "author":
                 $statement = $database->prepare("SELECT DISTINCT title, book.desc, isbn, author FROM book "
-                      . "WHERE author LIKE ?"
-                      . "LIMIT 30");
+                        . "WHERE author LIKE ?"
+                        . "LIMIT 30");
                 $statement->execute(array(0 => "%" . $request->param("query") . "%"));
                 break;
 
             case "isbn":
                 $statement = $database->prepare("SELECT DISTINCT title, book.desc, isbn, author FROM book "
-                      . "WHERE book.isbn = ?"
-                      . "LIMIT 30");
+                        . "WHERE book.isbn = ?"
+                        . "LIMIT 30");
                 $statement->execute(array(0 => $request->param("query")));
                 break;
 
             case "title":
                 $statement = $database->prepare("SELECT DISTINCT title, book.desc, isbn, author FROM book "
-                      . "WHERE title LIKE ? "
-                      . "LIMIT 30");
+                        . "WHERE title LIKE ? "
+                        . "LIMIT 30");
                 $statement->execute(array(0 => "%" . $request->param("query") . "%"));
                 break;
 
@@ -157,9 +168,9 @@ $klein->respond('POST', '/resetpassword', function($request, $response, $service
         $uuid = $statement->fetchALL(PDO::FETCH_ASSOC);
         if (count($uuid) === 1 && isset($uuid[0])) {
             $id = $uuid[0]['uuid'];
-            $db->prepare("INSERT INTO passwordreset (userId, passphrase) VALUES (?,?) "
-                        . "ON DUPLICATE KEY UPDATE passphrase = ?")
-                  ->execute(array($id, $key, $key));
+            $db->prepare("INSERT INTO passwordreset (userId, passphrase) VALUES (?, ?) "
+                            . "ON DUPLICATE KEY UPDATE passphrase = ?")
+                    ->execute(array($id, $key, $key));
             $mailgun = new \Mailgun\Mailgun(getMailgunKey());
             $mailgun->sendMessage('ae97.net', array(
                 'from' => 'library@ae97.net',
@@ -202,7 +213,7 @@ function randBook($app) {
     $statement->execute();
     $books = $statement->fetchALL(PDO::FETCH_ASSOC);
     $randBook = $database->prepare("SELECT title, author, book.desc FROM book "
-          . "WHERE isbn = ?");
+            . "WHERE isbn = ?");
     $randBook->execute(array(0 => $books[mt_rand(0, count($books) - 1)]['isbn']));
     return $randBook->fetchALL(PDO::FETCH_ASSOC);
 }
