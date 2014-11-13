@@ -147,6 +147,13 @@ $klein->respond('POST', '/search', function($request, $response, $service, $app)
                 $statement->execute(array(0 => "%" . $request->param("query") . "%"));
                 break;
 
+            case "genre":
+                $statement = $database->prepare("SELECT DISTINCT title, book.desc, book.isbn, author FROM book "
+                        . "INNER JOIN bookgenre ON bookgenre.isbn = book.isbn "
+                        . "WHERE genre = ?");
+                $statement->execute(array(0 => $request->param("query")));
+                break;
+
             default:
                 echo json_encode(array("msg" => "failed", "error" => "Invalid search type"));
                 return;
