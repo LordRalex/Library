@@ -1,0 +1,64 @@
+﻿<!DOCTYPE html>
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="description" content="">
+        <meta name="author" content="">
+        <link rel="icon" href="/assets/favicon.ico">
+        <title>Public Library</title>
+        <link href="/assets/bootstrap.min.css" rel="stylesheet">
+        <link href="/assets/justified-nav.css" rel="stylesheet">
+    </head>
+
+    <body>
+
+        <div class="container">
+
+            <div class="masthead">
+                <h3 class="text-muted">Library</h3>
+                <ul class="nav nav-justified">
+                    <li class="active"><a href="/home">Home</a></li>
+                    <li><a href="/search">Search</a></li>
+                    <li><a href="/">About</a></li>
+                    <li><a href="/">Contact</a></li>
+                    <?php
+                    if (isLoggedIn()) {
+                        echo '<li><a href="/logout">Logout</a></li>';
+                    } else {
+                        echo '<li><a href="/login">Login</a></li>';
+                    }
+                    ?>
+                </ul>
+            </div>
+        
+
+            <div class ="container">
+                <div class="col-lg-4"></div>
+                <div class="col-lg-4">
+                    <h3>Register</h3>
+                    <form class="form-register" role="form" method="post" action="/register">
+                        Name: <input name ="name" type ="text" class ="form-control" placeholder ="Name" required>
+                        <br>
+                        Phone: <input name="phonenumber" type="text" class="form-control" placeholder="Phone Number"><br>
+                        Email: <input name = "email" type = "text" class = "form-control" placeholder = "Email" required autofocus>
+                        Retype Email: <input name ="retypeemail" type="text" class="form-control" placeholder="Retype Email" required autofocus>
+                        <br><br>
+                        Password: <input name = "password" type = "password" class = "form-control" placeholder = "Password" required>
+                        Retype Password: <input name = "retypepassword" type="password" class ="form-control" placeholder ="Retype Password" required>
+                        <p></p>
+                        <button class="btn btn-lg btn-primary btn-block" type="submit">Register</button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="footer">
+                <p>© AE97 2014</p>
+            </div>
+
+        </div>
+
+        <script src="./assets/ie10-viewport-bug-workaround.js"></script>
+
+    </body>
+</html>

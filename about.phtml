@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="description" content="">
+        <meta name="author" content="">
+        <link rel="icon" href="/assets/favicon.ico">
+        <title>Public Library</title>
+        <link href="/assets/bootstrap.min.css" rel="stylesheet">
+        <link href="/assets/justified-nav.css" rel="stylesheet">
+    </head>
+
+    <body>
+
+        <div class="container">
+
+            <div class="masthead">
+                <h3 class="text-muted">Library</h3>
+                <ul class="nav nav-justified">
+                    <li><a href="/home">Home</a></li>
+                    <li><a href="/search">Search</a></li>
+                    <li class="active"><a href="/about">About</a></li>
+                    <li><a href="/">Contact</a></li>
+                    <?php
+                    if (isLoggedIn()) {
+                        echo '<li><a href="/logout">Logout</a></li>';
+                    } else {
+                        echo '<li><a href="/login">Login</a></li>';
+                    }
+                    ?>
+                </ul>
+            </div>
+            
+            <div class="row">
+                <h2 align="center">About us</h2>
+                <div class="col-lg-6"><br><img src="http://cdn.loc.gov/service/pnp/highsm/18400/18411r.jpg" alt="Front of the library" style="width:448px;height:298px"></div>
+                <h3>Library Mission</h3><div class="col-lg-6">
+                <p class="lead">The Library faculty and staff envision a library that supports and enhances the development of critically thinking, educated and informed lifelong learners. The Library is integral to the community's learning and research mission and endeavors to create physical and virtual environments that promote discovery of new knowledge and the transfer of existing knowledge. The Library fulfills this mission by providing organized access to a diverse array of quality print, electronic, and other resources and by continuously improving the effectiveness of its bibliographic, instructional, and reference services.</p>
+                </div>
+            </div>
+            
+
+            <div class="footer">
+                <p>© AE97 2014</p>
+            </div>
+
+        </div>
+
+        <script src="./assets/ie10-viewport-bug-workaround.js"></script>
+
+    </body>
+</html>
