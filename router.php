@@ -23,11 +23,42 @@ $klein->respond(function($request, $response, $service, $app) {
 
 $klein->respond('GET', '/logout', function($request, $response, $service, $app) {
     //TODO: Improve security of logout
+    //You can currently force another user to log out by sending their email
     $email = $request->cookies()['email'];
     $response->cookie('session', null);
     $response->cookie('email', null);
     $app->librarydb->prepare("UPDATE user SET session = NULL WHERE email = ?")->execute(array(0 => $email));
     $response->redirect('/', 302);
+});
+
+$klein->respond('GET', '/resetpw', function($request, $response, $service, $app) {
+    try {
+        $request->validateParam('e', 'No email provided')->isEmail();
+        $request->validateParam('k', 'No reset key provided');
+        $database = $app->librarydb;
+        $statement = $database->prepare("SELECT passphrase AS k FROM passwordreset "
+              . "INNER JOIN user ON user.uuid = userId "
+              . "WHERE user.email = ?");
+        $statement->execute(array(0 => $request->param('e')));
+        $result = $statement->fetchAll(PDO::FETCH_ASSOC);
+        if ($result['k'] === $request->param('k')) {
+            $database->prepare("DELETE FROM passwordreset "
+                        . "INNER JOIN user ON user.uuid = userId "
+                        . "WHERE user.email = ?")
+                  ->execute(array(0 => $request->param('e')));
+        } else {
+            $response->flash("Reset link not valid");
+            $response->redirect('/login', 302);
+            return;
+        }
+    } catch (Exception $e) {
+        if ($e instanceof PDOException) {
+            error_log($e);
+        }
+        $service->flash('Error: ' . $e->getMessage());
+        $response->redirect('/login', 302);
+        return;
+    }
 });
 
 $klein->respond('GET', '/', function($request, $response, $service, $app) {
@@ -38,15 +69,15 @@ $klein->respond('GET', '/[a:page]', function ($request, $response, $service, $ap
     $page = $request->param('page');
     if ($page === null || $page === 'home' || $page === "logout") {
         $service->render("home.phtml", array('randomBook' => randBook($app)));
-    }else{
-    $service->render($page . ".phtml");
+    } else {
+        $service->render($page . ".phtml");
     }
 });
 
 $klein->respond('POST', '/login', function($request, $response, $service, $app) {
     try {
-        $service->validateParam('email', 'Please enter a valid eamail')->isLen(5, 256);
-        $service->validateParam('password', 'Please enter a password')->isLen(1, 256);
+        $service->validateParam('email', 'Please enter a valid email');
+        $service->validateParam('password', 'Please enter a password');
         $statement = $app->librarydb->prepare("SELECT uuid,password,email FROM user WHERE email=?");
         $statement->execute(array($request->param("email")));
         $statement->setFetchMode(PDO::FETCH_ASSOC);
@@ -131,11 +162,11 @@ $klein->respond('POST', '/resetpassword', function($request, $response, $service
                   ->execute(array($id, $key, $key));
             $mailgun = new \Mailgun\Mailgun(getMailgunKey());
             $mailgun->sendMessage('ae97.net', array(
-               'from' => 'library@ae97.net',
+                'from' => 'library@ae97.net',
                 'to' => $request->param('email'),
                 'subject' => 'Password Reset',
                 'html' => 'Someone recently requested a password reset for your account. '
-                . 'If this was your choice, then please click <a href="http://library.ae97.net/resetpassword?e='
+                . 'If this was your choice, then please click <a href="http://library.ae97.net/resetpw?e='
                 . $request->param('email') . '&k=' . $key . '">this link</a> to complete the process'
             ));
         }
@@ -171,7 +202,7 @@ function randBook($app) {
     $statement->execute();
     $books = $statement->fetchALL(PDO::FETCH_ASSOC);
     $randBook = $database->prepare("SELECT title, author, book.desc FROM book "
-            . "WHERE isbn = ?");
-    $randBook->execute(array(0 => $books[mt_rand(0, count($books)-1)]['isbn']));
+          . "WHERE isbn = ?");
+    $randBook->execute(array(0 => $books[mt_rand(0, count($books) - 1)]['isbn']));
     return $randBook->fetchALL(PDO::FETCH_ASSOC);
 }
