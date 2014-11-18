@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="description" content="">
+        <meta name="author" content="">
+        <link rel="icon" href="/assets/favicon.ico">
+        <title>Public Library</title>
+        <link href="/assets/bootstrap.min.css" rel="stylesheet">
+        <link href="/assets/justified-nav.css" rel="stylesheet">
+    </head>
+
+    <body>
+
+        <div class="container">
+
+            <div class="masthead">
+                <h3 class="text-muted">Library</h3>
+                <ul class="nav nav-justified">
+                    <li><a href="/home">Home</a></li>
+                    <li><a href="/search">Search</a></li>
+                    <li><a href="/about">About</a></li>
+                    <li><a href="/">Contact</a></li>
+                    <?php
+                    if (isLoggedIn()) {
+                        echo '<li><a href="/logout">Logout</a></li>';
+                    } else {
+                        echo '<li><a href="/login">Login</a></li>';
+                    }
+                    ?>
+                </ul>
+            </div>
+            <div class="masthead">
+                <ul class="nav nav-justified">
+                    <li><a href="/watchlist">Watchlist</a></li>
+                    <li><a href="/fees">Fees</a></li>
+                    <li class="active"><a href="/">Book View</a></li>
+                    <li><a href="/settings">Account Settings</a></li>
+                </ul>
+            </div>
+            
+            <div class="row">
+                <div class="col-lg-4"></div>
+                <div class="col-lg-4">
+                    <h2 align="center">Book</h2>
+                    <strong>Title: </strong><br>
+                    <strong>Author: </strong><br>
+                    <strong>Genre: </strong><br>
+                    <strong>Description: </strong><br>
+                    
+                    <p align="center"><a class="btn btn-primary" role="button">Add</a>
+                        <a class="btn btn-primary" role="button">Remove</a>
+                    </p>
+                </div>
+            </div>
+            
+            
+            
+            <div class="footer">
+                <p>© AE97 2014</p>
+            </div>
+
+        </div>
+
+        <script src="./assets/ie10-viewport-bug-workaround.js"></script>
+
+    </body>
+</html>
