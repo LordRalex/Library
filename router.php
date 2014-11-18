@@ -259,9 +259,9 @@ function randBook($app) {
     $statement->execute();
     $books = $statement->fetchALL(PDO::FETCH_ASSOC);
     $randBook = $database->prepare("SELECT title, author, book.desc FROM book "
-            . "WHERE isbn = ?");
+            . "WHERE isbn = ? LIMIT 1");
     $randBook->execute(array(0 => $books[mt_rand(0, count($books) - 1)]['isbn']));
-    return $randBook->fetchALL(PDO::FETCH_ASSOC);
+    return $randBook->fetchALL(PDO::FETCH_ASSOC)[0];
 }
 
 function getGUID() {
