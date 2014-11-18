@@ -31,32 +31,42 @@
                     ?>
                 </ul>
             </div>
-
-            <div class="jumbotron">
-                <h2>Welcome to the Public Library website!</h2>
-                <p class="lead"></p>
-                <p><a class="btn btn-lg btn-success" href="/search" role="button">Look for a book today</a></p>
-            </div>
-
-            <div class="row">
-                <div class="col-lg-4">
-                    <h2>Search</h2>
-                    <p>Find books by searching for the title, author, or ISBN number. If you find a book you can add it to your watchlist for later check-out.</p>
-                    
+            <?php if (isLoggedIn()) { ?>
+                <div class="masthead">
+                    <ul class="nav nav-justified">
+                        <li><a href="/watchlist">Watchlist</a></li>
+                        <li><a href="/fees">Fees</a></li>
+                        <li><a href="/bookview">Book view</a></li>
+                        <li><a href="/settings">Account Settings</a></li>
+                    </ul>
                 </div>
-                <div class="col-lg-4">
-                    <h2>Try This Book</h2>
-                    <p><strong>Title:</strong> <?php echo $this->randomBook['title'];?></p>
-                    <p><strong>Author:</strong> <?php echo $this->randomBook['author'];?></p>
-                    <p><strong>Description:</strong> <?php echo $this->randomBook['desc'];?></p>
+                <?php }
+                ?>
+
+                <div class="jumbotron">
+                    <h2>Welcome to the Public Library website!</h2>
+                    <p><a class="btn btn-lg btn-success" href="/search" role="button">Look for a book today</a></p>
                 </div>
-                
+
+                <div class="row">
+                    <div class="col-lg-4">
+                        <h2>Search</h2>
+                        <p>Find books by searching for the title, author, or ISBN number. If you find a book you can add it to your watchlist for later check-out.</p>
+
+                    </div>
+                    <div class="col-lg-4">
+                        <h2>Great Reads</h2>
+                        <p><strong>Title:</strong> <?php echo $this->randomBook['title']; ?></p>
+                        <p><strong>Author:</strong> <?php echo $this->randomBook['author']; ?></p>
+                        <p><strong>Description:</strong> <?php echo $this->randomBook['desc']; ?></p>
+                </div>
+
                 <div class="col-lg-4">
                     <h2>Contact Us</h2>
                     <p>If you have any questions about our library or if you need help with your user account feel free to contact us. </p>
                 </div>
             </div>
-            
+
             <div class="row">
                 <div class="col-lg-4">
                     <p><a class="btn btn-primary" href="/search" role="button">Search »</a></p>

@@ -31,15 +31,18 @@
                     ?>
                 </ul>
             </div>
-            <div class="masthead">
-                <ul class="nav nav-justified">
-                    <li><a href="/watchlist">Watchlist</a></li>
-                    <li><a href="/fees">Fees</a></li>
-                    <li class="active"><a href="/">Book View</a></li>
-                    <li><a href="/settings">Account Settings</a></li>
-                </ul>
-            </div>
-            
+            <?php if (isLoggedIn()) { ?>
+                <div class="masthead">
+                    <ul class="nav nav-justified">
+                        <li><a href="/watchlist">Watchlist</a></li>
+                        <li><a href="/fees">Fees</a></li>
+                        <li><a href="/bookview">Book view</a></li>
+                        <li><a href="/settings">Account Settings</a></li>
+                    </ul>
+                </div>
+            <?php }
+            ?>
+
             <div class="row">
                 <div class="col-lg-4"></div>
                 <div class="col-lg-4">
@@ -48,15 +51,16 @@
                     <strong>Author: </strong><br>
                     <strong>Genre: </strong><br>
                     <strong>Description: </strong><br>
-                    
+                    <?php if (isLoggedIn()) { ?>
                     <p align="center"><a class="btn btn-primary" role="button">Add</a>
                         <a class="btn btn-primary" role="button">Remove</a>
                     </p>
+                    <?php }?>
                 </div>
             </div>
-            
-            
-            
+
+
+
             <div class="footer">
                 <p>© AE97 2014</p>
             </div>
