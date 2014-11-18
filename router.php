@@ -197,6 +197,45 @@ $klein->respond('POST', '/resetpassword', function($request, $response, $service
     $response->redirect('/login', 302);
 });
 
+$klein->respond('POST', '/register', function ($request, $response, $service, $app) {
+    $service->addValidator('equal', function ($str, $param) use ($request) {
+        return $str === $request->param($param);
+    });
+
+    try {
+        $service->validateParam('email', 'Invalid email provided')->isEmail()->notNull();
+        $service->validateParam('email', 'Emails do not match')->isEqual('retypeemail');
+        $service->validateParam('name', 'You must provide a name')->notNull();
+        $service->validateParam('password', 'Password must be between 4 and 64 characters')->notNull()->isLen(4, 64);
+        $service->validateParam('password', 'Passwords do not match')->isEqual('retypepassword');
+    } catch (Exception $ex) {
+        $service->flash($ex->getMessage());
+        $response->redirect('/register', 302);
+        return;
+    }
+    try {
+        $db = $app->librarydb;
+        $phone = $request->param('phone');
+        if ($phone == null || $phone->trim() === '') {
+            $phone = null;
+        }
+        $db->prepare("INSERT INTO user (uuid, name, password, email, phone) VALUES (?, ?, ?, ?, ?)")
+                ->execute(array(
+                    getGUID(),
+                    $request->param('name'),
+                    password_hash($request->param('password'), PASSWORD_BCRYPT),
+                    $request->param('email'),
+                    $phone
+        ));
+        $service->flash('Your account has been created, check your email for the verification');
+        $response->redirect('/login', 302);
+    } catch (PDOException $ex) {
+        $service->flash('An error occured while creating your account');
+        $service->flash($ex->getMessage());
+        $response->redirect('/register', 302);
+    }
+});
+
 
 $klein->dispatch();
 
@@ -223,4 +262,20 @@ function randBook($app) {
             . "WHERE isbn = ?");
     $randBook->execute(array(0 => $books[mt_rand(0, count($books) - 1)]['isbn']));
     return $randBook->fetchALL(PDO::FETCH_ASSOC);
+}
+
+function getGUID() {
+    if (function_exists('com_create_guid')) {
+        return com_create_guid();
+    } else {
+        mt_srand((double) microtime() * 10000); //optional for php 4.2.0 and up.
+        $charid = strtoupper(md5(uniqid(rand(), true)));
+        $hyphen = chr(45); // "-"
+        $uuid = substr($charid, 0, 8) . $hyphen
+                . substr($charid, 8, 4) . $hyphen
+                . substr($charid, 12, 4) . $hyphen
+                . substr($charid, 16, 4) . $hyphen
+                . substr($charid, 20, 12);
+        return $uuid;
+    }
 }

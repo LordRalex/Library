@@ -31,11 +31,23 @@
                     ?>
                 </ul>
             </div>
-        
+
 
             <div class ="container">
-                <div class="col-lg-4"></div>
                 <div class="col-lg-4">
+                </div>
+                <div class="col-lg-4">
+                    <?php
+                    $flashes = $this->flashes();
+                    if (count($flashes) > 0) {
+                        echo '<br></br>';
+                        foreach ($flashes as $type => $messages):
+                            foreach ($messages as $msg):
+                                echo '<div style="center" class="alert alert-danger">' . $msg . '</div>';
+                            endforeach;
+                        endforeach;
+                    }
+                    ?>
                     <h3>Register</h3>
                     <form class="form-register" role="form" method="post" action="/register">
                         Name: <input name ="name" type ="text" class ="form-control" placeholder ="Name" required>
@@ -48,7 +60,7 @@
                         Retype Password: <input name = "retypepassword" type="password" class ="form-control" placeholder ="Retype Password" required>
                         <p></p>
                         <button class="btn btn-lg btn-primary btn-block" type="submit">Register</button>
-                    </form>
+                    </form>                    
                 </div>
             </div>
 
