@@ -9,12 +9,7 @@ $klein = new \Klein\Klein();
 
 $klein->respond(function($request, $response, $service, $app) {
     $app->register('librarydb', function() {
-        $_DATABASE = array(
-            'host' => 'localhost',
-            'db' => 'library',
-            'user' => 'library',
-            'pass' => 'library'
-        );
+        $_DATABASE = getDatabaseConfig();
         $db = new PDO("mysql:host=" . $_DATABASE['host'] . ";dbname=" . $_DATABASE['db'], $_DATABASE['user'], $_DATABASE['pass'], array(PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES 'utf8'"));
         $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
         return $db;
@@ -120,20 +115,20 @@ $klein->respond('POST', '/login', function($request, $response, $service, $app) 
     try {
         $service->validateParam('email', 'Please enter a valid email');
         $service->validateParam('password', 'Please enter a password');
-        $statement = $app->librarydb->prepare("SELECT uuid, password, email FROM user WHERE email = ?");
+        $statement = $app->librarydb->prepare("SELECT uuid, password FROM user WHERE email = ?");
         $statement->execute(array($request->param("email")));
         $statement->setFetchMode(PDO::FETCH_ASSOC);
         $db = $statement->fetch();
 
-        if (!isset($db['password']) || !isset($db['uuid']) || !isset($db['email']) || !password_verify($request->param('password'), $db['password'])) {
+        if (!isset($db['password']) || !isset($db['uuid']) || !password_verify($request->param('password'), $db['password'])) {
             $service->flash('The given email and password is incorrect');
             $response->redirect('/login', 302);
             return;
         }
         $session = generate_random_string(32);
         $response->cookie('session', $session);
-        $response->cookie('email', $db['email']);
-        $app->librarydb->prepare("UPDATE user SET session = ? WHERE email = ?")->execute(array(0 => $session, 1 => $db['email']));
+        $response->cookie('uuid', $db['uuid']);
+        $app->librarydb->prepare("UPDATE user SET session = ? WHERE uuid = ?")->execute(array(0 => $session, 1 => $db['uuid']));
         $response->redirect('/', 302);
     } catch (Exception $e) {
         if ($e instanceof PDOException) {
@@ -295,7 +290,26 @@ function generate_random_string($length) {
 }
 
 function isLoggedIn() {
-    return isset($_COOKIE['session']);
+    if (!isset($_COOKIE['session']) || !isset($_COOKIE['uuid'])) {
+        return false;
+    }
+    $session = $_COOKIE['session'];
+    $uuid = $_COOKIE['uuid'];
+    try {
+        $_DATABASE = getDatabaseConfig();
+        $db = new PDO("mysql:host=" . $_DATABASE['host'] . ";dbname=" . $_DATABASE['db'], $_DATABASE['user'], $_DATABASE['pass'], array(PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES 'utf8'"));
+        $statement = $db->prepare("SELECT uuid, session, rights FROM user WHERE uuid = ?");
+        $statement->execute(array($uuid));
+        $result = $statement->fetchAll(PDO::FETCH_ASSOC);
+        if (isset($result) && count($result) == 1) {
+            return $result[0]['rights'];
+        } else {
+            return false;
+        }
+    } catch (PDOException $ex) {
+        error_log($ex);
+        return false;
+    }
 }
 
 function randBook($app) {
