@@ -22,13 +22,11 @@ $klein->respond(function($request, $response, $service, $app) {
 });
 
 $klein->respond('GET', '/logout', function($request, $response, $service, $app) {
-    //TODO: Improve security of logout
-    //You can currently force another user to log out by sending their email
-    $email = $request->cookies()['email'];
+    $uuid = $request->cookies()['uuid'];
     $response->cookie('session', null);
     $response->cookie('email', null);
-    $app->librarydb->prepare("UPDATE user SET session = NULL WHERE email = ?")->execute(array(0 => $email));
-    $response->redirect('/', 302);
+    $app->librarydb->prepare("UPDATE user SET session = NULL WHERE uuid = ?")->execute(array($uuid));
+    $response->redirect('/', 302)->send();
 });
 
 $klein->respond('GET', '/resetpw', function($request, $response, $service, $app) {
@@ -72,13 +70,46 @@ $klein->respond('GET', '/resetpw', function($request, $response, $service, $app)
     }
 });
 
+$klein->respond('GET', '/validate', function ($request, $response, $service, $app) {
+    try {
+        $service->validateParam('u', "UUID is not valid")->notNull();
+        $service->validateParam('k', "Key is not valid")->notNull()->isLen(36);
+    } catch (Exception $ex) {
+        $service->flash($ex->getMessage());
+        $response->redirect('/login', 302)->send();
+        return;
+    }
+    try {
+        $db = $app->librarydb;
+        $statement = $db->prepare("SELECT useruuid AS uuid, validation AS k FROM uservalidate WHERE useruuid = ?");
+        $statement->execute(array($request->param('u')));
+        $result = $statement->fetchAll(PDO::FETCH_ASSOC);
+        if (isset($result) && count($result) == 1 && $result[0]['k'] === $request->param('k')) {
+            $db->prepare("UPDATE user SET verified = 1 WHERE uuid = ?")
+                    ->execute(array($result['uuid']));
+            $db->prepare("DELETE FROM uservalidate WHERE useruuid = ?")
+                    ->execute(array($result['uuid']));
+            $service->flash("Your email has been verified, you may now log in");
+        } else {
+            $service->flash("Invalid user id and key");
+        }
+    } catch (PDOException $ex) {
+        $service->flash("A database error occurred");
+        error_log($ex);
+    }
+    $response->redirect('/login', 302)->send();
+});
+
 $klein->respond('GET', '/', function($request, $response, $service, $app) {
     $service->render("home.phtml", array('randomBook' => randBook($app)));
 });
 
 $klein->respond('GET', '/[a:page]', function ($request, $response, $service, $app) {
+    if ($response->isSent()) {
+        return;
+    }
     $page = $request->param('page');
-    if ($page === null || $page === 'home' || $page === "logout") {
+    if ($page === null || $page === 'home') {
         $service->render("home.phtml", array('randomBook' => randBook($app)));
     } else if (file_exists($page . ".phtml")) {
         $service->render($page . ".phtml");
@@ -219,15 +250,29 @@ $klein->respond('POST', '/register', function ($request, $response, $service, $a
         if ($phone == null || $phone->trim() === '') {
             $phone = null;
         }
+        $uuid = getGUID();
         $db->prepare("INSERT INTO user (uuid, name, password, email, phone) VALUES (?, ?, ?, ?, ?)")
                 ->execute(array(
-                    getGUID(),
+                    $uuid,
                     $request->param('name'),
                     password_hash($request->param('password'), PASSWORD_BCRYPT),
                     $request->param('email'),
                     $phone
         ));
+        $validationKey = generate_random_string(36);
+        $db->prepare("INSERT INTO uservalidate (useruuid, validation) VALUES (?, ?)")
+                ->execute(array($uuid, $validationKey));
+
         $service->flash('Your account has been created, check your email for the verification');
+        $mailgun = new \Mailgun\Mailgun(getMailgunKey());
+        $mailgun->sendMessage('ae97.net', array(
+            'from' => 'library@ae97.net',
+            'to' => $request->param('email'),
+            'subject' => 'Account validation',
+            'html' => 'Someone recently created an account for this email on http://library.ae97.net. '
+            . 'If this was your choice, then please click <a href="http://library.ae97.net/validate?u='
+            . $uuid . '&k=' . $validationKey . '">this link</a> to complete the process'
+        ));
         $response->redirect('/login', 302);
     } catch (PDOException $ex) {
         $service->flash('An error occured while creating your account');
