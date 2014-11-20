@@ -115,6 +115,7 @@ $klein->respond('GET', '/bookview', function($request, $response, $service, $app
         }
         $book = $db[0];
         $service->render("bookview.phtml", array('randomBook' => $book));
+        $response->send();
     } catch (Exception $e) {
         if ($e instanceof PDOException) {
             error_log($e);
