@@ -87,7 +87,7 @@
                     </thead>
                     <tbody data-bind="foreach: bookTable" id="booktable">
                         <tr>
-                            <td><p data-bind="html: $data.title"></p></td>
+                            <td><a data-bind="attr: {href:'/bookview?isbn='+$data.isbn}, text: $data.title"></a></td>
                             <td><p data-bind="text: $data.author"></p></td>
                             <td><p data-bind="html: $data.desc"></p></td>
                             <td><p data-bind="text: $data.isbn"></p></td>
