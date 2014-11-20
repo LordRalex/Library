@@ -47,14 +47,14 @@
                 <div class="col-lg-4"></div>
                 <div class="col-lg-4">
                     <h2 align="center">Book</h2>
-                    <p><strong>Title:</strong> <?php echo $this->randomBook['title']; ?></p>
-                    <p><strong>Author:</strong> <?php echo $this->randomBook['author']; ?></p>
-                    <p><strong>Description:</strong> <?php echo $this->randomBook['desc']; ?></p>
+                    <p><strong>Title:</strong> <?php echo $this->book['title']; ?></p>
+                    <p><strong>Author:</strong> <?php echo $this->book['author']; ?></p>
+                    <p><strong>Description:</strong> <?php echo $this->book['desc']; ?></p>
                     <strong>Genre: </strong><br>
                     <?php if (isLoggedIn()) { ?>
-                    <p align="center"><a class="btn btn-primary" role="button">Add</a>
-                            <a class="btn btn-primary" role="button">Remove</a>
-                        </p>
+                            <p align="center"><a class="btn btn-primary" role="button" href="/watchlist-add?isbn=<?php echo $this->book['isbn']; ?>">Add</a>
+                                <a class="btn btn-primary" role="button" href="/watchlist-delete?isbn=<?php echo $this->book['isbn']; ?>">Remove</a>
+                                </p>
                     <?php } ?>
                 </div>
             </div>

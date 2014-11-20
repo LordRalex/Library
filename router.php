@@ -114,7 +114,7 @@ $klein->respond('GET', '/bookview', function($request, $response, $service, $app
             return;
         }
         $book = $db[0];
-        $service->render("bookview.phtml", array('randomBook' => $book));
+        $service->render("bookview.phtml", array('book' => $book));
         $response->send();
     } catch (Exception $e) {
         if ($e instanceof PDOException) {
@@ -145,6 +145,42 @@ $klein->respond('GET', '/watchlist', function($request, $response, $service, $ap
     }
     $service->render("watchlist.phtml", array('books' => $db));
     $response->send();
+});
+
+$klein->respond('GET', '/watchlist-delete', function($request, $response, $service, $app) {
+    if ($request->param('isbn') == null) {
+        $response->redirect('/watchlist', 302)->send();
+        return;
+    }
+    $isbn = $request->param('isbn');
+    try {
+        $statement = $app->librarydb->prepare("DELETE FROM watchlist "
+                . "WHERE useruuid = ? AND isbn = ? ");
+        $statement->execute(array($request->cookies()['uuid'], $isbn));
+    } catch (Exception $e) {
+        if ($e instanceof PDOException) {
+            error_log($e);
+        }
+    }
+    $response->redirect('/watchlist', 302)->send();
+});
+
+$klein->respond('GET', '/watchlist-add', function($request, $response, $service, $app) {
+    if ($request->param('isbn') == null) {
+        $response->redirect('/watchlist', 302)->send();
+        return;
+    }
+    $isbn = $request->param('isbn');
+    try {
+        $statement = $app->librarydb->prepare("INSERT INTO watchlist "
+                . "VALUES(?,?)");
+        $statement->execute(array($request->cookies()['uuid'], $isbn));
+    } catch (Exception $e) {
+        if ($e instanceof PDOException) {
+            error_log($e);
+        }
+    }
+    $response->redirect('/watchlist', 302)->send();
 });
 
 $klein->respond('GET', '/', function($request, $response, $service, $app) {
