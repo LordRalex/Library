@@ -32,7 +32,7 @@
                 </ul>
             </div>
             <?php if (isLoggedIn()) { ?>
-                <div class="masthead">
+            <div class="masthead">
                     <ul class="nav nav-justified">
                         <li><a href="/watchlist">Watchlist</a></li>
                         <li><a href="/payment">Payment</a></li>
@@ -47,15 +47,15 @@
                 <div class="col-lg-4"></div>
                 <div class="col-lg-4">
                     <h2 align="center">Book</h2>
-                    <strong>Title: </strong><br>
-                    <strong>Author: </strong><br>
+                    <p><strong>Title:</strong> <?php echo $this->randomBook['title']; ?></p>
+                    <p><strong>Author:</strong> <?php echo $this->randomBook['author']; ?></p>
+                    <p><strong>Description:</strong> <?php echo $this->randomBook['desc']; ?></p>
                     <strong>Genre: </strong><br>
-                    <strong>Description: </strong><br>
                     <?php if (isLoggedIn()) { ?>
                     <p align="center"><a class="btn btn-primary" role="button">Add</a>
-                        <a class="btn btn-primary" role="button">Remove</a>
-                    </p>
-                    <?php }?>
+                            <a class="btn btn-primary" role="button">Remove</a>
+                        </p>
+                    <?php } ?>
                 </div>
             </div>
 

@@ -95,6 +95,35 @@ $klein->respond('GET', '/validate', function ($request, $response, $service, $ap
     $response->redirect('/login', 302)->send();
 });
 
+$klein->respond('GET', '/bookview', function($request, $response, $service, $app) {
+    if ($request->param('isbn') == null) {
+        $response->redirect('/search', 302)->send();
+        return;
+    }
+    $isbn = $request->param('isbn');
+    try {
+         $statement = $app->librarydb->prepare("SELECT title, book.desc, book.isbn, author FROM book "
+                //. "INNER JOIN bookgenre ON bookgenre.isbn = book.isbn "
+                . "WHERE isbn = ? ");
+        $statement->execute(array($isbn));
+        $statement->setFetchMode(PDO::FETCH_ASSOC);
+        $db = $statement->fetchAll();
+
+        if (count($db) != 1) {
+            $response->redirect('/search', 302)->send();
+            return;
+        }
+        $book = $db[0];
+        $service->render("bookview.phtml", array('randomBook' => $book));
+    } catch (Exception $e) {
+        if ($e instanceof PDOException) {
+            error_log($e);
+        }
+        $response->redirect('/search', 302)->send();
+        return;
+    }
+});
+
 $klein->respond('GET', '/', function($request, $response, $service, $app) {
     $service->render("home.phtml", array('randomBook' => randBook($app)));
 });
@@ -176,7 +205,8 @@ $klein->respond('POST', '/search', function($request, $response, $service, $app)
             case "genre":
                 $statement = $database->prepare("SELECT DISTINCT title, book.desc, book.isbn, author FROM book "
                         . "INNER JOIN bookgenre ON bookgenre.isbn = book.isbn "
-                        . "WHERE genre = ?");
+                        . "WHERE genre = ? "
+                        . "LIMIT 30");
                 $statement->execute(array(0 => $request->param("query")));
                 break;
 
