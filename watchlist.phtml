@@ -55,11 +55,11 @@
                     <tbody>
                         <?php foreach ($this->books as $book) { ?>
                         <tr>
-                            <td><a href="/bookview?isbn=<?php echo $book . isbn; ?>"><?php echo $book . title; ?></a></td>
-                            <td><p><?php echo $book . author; ?></p></td>
-                            <td><p><?php echo $book . desc; ?></p></td>
-                            <td><p><?php echo $book . isbn; ?></p></td>
-                        </tr>
+                                <td><a href="/bookview?isbn=<?php echo $book['isbn']; ?>"><?php echo $book['title']; ?></a></td>
+                                <td><p><?php echo $book['author']; ?></p></td>
+                                <td><p><?php echo $book['desc']; ?></p></td>
+                                <td><p><?php echo $book['isbn']; ?></p></td>
+                            </tr>
                         <?php } ?>
                     </tbody>              
                 </table>

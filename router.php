@@ -102,7 +102,7 @@ $klein->respond('GET', '/bookview', function($request, $response, $service, $app
     }
     $isbn = $request->param('isbn');
     try {
-         $statement = $app->librarydb->prepare("SELECT title, book.desc, book.isbn, author FROM book "
+        $statement = $app->librarydb->prepare("SELECT title, book.desc, book.isbn, author FROM book "
                 //. "INNER JOIN bookgenre ON bookgenre.isbn = book.isbn "
                 . "WHERE isbn = ? ");
         $statement->execute(array($isbn));
@@ -123,6 +123,28 @@ $klein->respond('GET', '/bookview', function($request, $response, $service, $app
         $response->redirect('/search', 302)->send();
         return;
     }
+});
+
+$klein->respond('GET', '/watchlist', function($request, $response, $service, $app) {
+    if (!isLoggedIn()) {
+        $response->redirect('/login', 302)->send();
+        return;
+    }
+    try {
+        $statement = $app->librarydb->prepare("SELECT book.title, book.desc, book.isbn, book.author FROM book "
+                . "INNER JOIN watchlist ON watchlist.isbn=book.isbn "
+                . "WHERE watchlist.useruuid = ? ");
+        $statement->execute(array($request->cookies()['uuid']));
+        $statement->setFetchMode(PDO::FETCH_ASSOC);
+        $db = $statement->fetchAll();
+    } catch (Exception $e) {
+        if ($e instanceof PDOException) {
+            error_log($e);
+        }
+        $db = array();
+    }
+    $service->render("watchlist.phtml", array('books' => $db));
+    $response->send();
 });
 
 $klein->respond('GET', '/', function($request, $response, $service, $app) {
