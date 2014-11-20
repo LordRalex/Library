@@ -32,7 +32,7 @@
                 </ul>
             </div>
             <?php if (isLoggedIn()) { ?>
-                <div class="masthead">
+            <div class="masthead">
                     <ul class="nav nav-justified">
                         <li class="active"><a href="/watchlist">Watch List</a></li>
                         <li><a href="/payment">Payment</a></li>
@@ -53,12 +53,14 @@
                         </tr>
                     </thead>
                     <tbody>
+                        <?php foreach ($this->books as $book) { ?>
                         <tr>
-                            <td><a href="/bookview">title</a></td>
-                            <td><p>author</p></td>
-                            <td><p>description</p></td>
-                            <td><p>isbn</p></td>
+                            <td><a href="/bookview?isbn=<?php echo $book . isbn; ?>"><?php echo $book . title; ?></a></td>
+                            <td><p><?php echo $book . author; ?></p></td>
+                            <td><p><?php echo $book . desc; ?></p></td>
+                            <td><p><?php echo $book . isbn; ?></p></td>
                         </tr>
+                        <?php } ?>
                     </tbody>              
                 </table>
             </div>
