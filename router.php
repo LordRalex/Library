@@ -201,13 +201,8 @@ $klein->respond('GET', '/payment', function($request, $response, $service, $app)
                 . "WHERE user = ?");
         $totalStatement->execute(array($request->cookies()['uuid']));
         $totalStatement->setFetchMode(PDO::FETCH_ASSOC);
-        $totalArray = $historyStatement->fetchAll();
-
-        if (count($totalArray) == 1) {
-            $total = $totalArray[0]['total'];
-        } else {
-            $total = 0;
-        }
+        $totalArray = $totalStatement->fetch();
+        $total = $totalArray['total'];
     } catch (Exception $e) {
         if ($e instanceof PDOException) {
             error_log($e);
