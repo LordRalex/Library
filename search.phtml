@@ -62,9 +62,10 @@
                     <div class="input-group-btn">
                         <button id="searchTypeButton" value="author" type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">Author <span class="caret"></span></button>
                         <ul class="dropdown-menu" role="menu">
-                            <li><a id="authorSearchType" class="searchTypeClass" value="author">Author</a></li>
-                            <li><a id="isbnSearchType" class="searchTypeClass" value="isbn">ISBN</a></li>
                             <li><a id="titleSearchType" class="searchTypeClass" value="title">Title</a></li>
+                            <li><a id="authorSearchType" class="searchTypeClass" value="author">Author</a></li> 
+                            <li><a id="genreSearchType" class="searchTypeClass" value="genre">Genre</a></li>
+                            <li><a id="isbnSearchType" class="searchTypeClass" value="isbn">ISBN</a></li>
                         </ul>
                     </div>
                     <input id="query" type="text" class="form-control" required onkeypress="searchKeyPress(event);">
