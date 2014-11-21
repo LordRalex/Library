@@ -183,6 +183,40 @@ $klein->respond('GET', '/watchlist-add', function($request, $response, $service,
     $response->redirect('/watchlist', 302)->send();
 });
 
+$klein->respond('GET', '/payment', function($request, $response, $service, $app) {
+    if (!isLoggedIn()) {
+        $response->redirect('/login', 302)->send();
+        return;
+    }
+    try {
+        $historyStatement = $app->librarydb->prepare("SELECT id, payment, date, description "
+                . "FROM transactions "
+                . "WHERE user = ?");
+        $historyStatement->execute(array($request->cookies()['uuid']));
+        $historyStatement->setFetchMode(PDO::FETCH_ASSOC);
+        $history = $historyStatement->fetchAll();
+
+        $totalStatement = $app->librarydb->prepare("SELECT SUM(payment) AS total "
+                . "FROM transactions "
+                . "WHERE user = ?");
+        $totalStatement->execute(array($request->cookies()['uuid']));
+        $totalStatement->setFetchMode(PDO::FETCH_ASSOC);
+        $totalArray = $historyStatement->fetchAll();
+
+        if (count($totalArray) == 1) {
+            $total = $totalArray[0]['total'];
+        } else {
+            $total = 0;
+        }
+    } catch (Exception $e) {
+        if ($e instanceof PDOException) {
+            error_log($e);
+        }
+    }
+    $service->render("payment.phtml", array('total' => $total, 'history' => $history));
+    $response->send();
+});
+
 $klein->respond('GET', '/', function($request, $response, $service, $app) {
     $service->render("home.phtml", array('randomBook' => randBook($app)));
 });

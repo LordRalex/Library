@@ -32,7 +32,7 @@
                 </ul>
             </div>
             <?php if (isLoggedIn()) { ?>
-                <div class="masthead">
+            <div class="masthead">
                     <ul class="nav nav-justified">
                         <li><a href="/watchlist">Watchlist</a></li>
                         <li class="active"><a href="/payment">Payment</a></li>
@@ -41,30 +41,30 @@
                 </div>
             <?php }
             ?>
-            <p></p><br>
             <div class="row">
                 <div class="col-lg-8"></div>
-                <div class="col-lg-2"><strong>Total:</strong></div>
-                <div class="col-lg-1"></div>
-                <div class="col-lg-1"><button class="btn btn-success">Pay</button></div>
+                <div class="col-lg-3"><h2><strong>Total:</strong> $<?php echo $this->total; ?></h2></div>
+                <div class="col-lg-1"><h2><button class="btn btn-success">Pay</button></h2></div>
             </div>
-            <div class="row">
-                <table class="table table-striped ">
-                    <thead>
-                        <tr>
-                            <th id="title_column" style ="width:20%">Transaction ID</th>
-                            <th id="title_genre" style ="width:20%">Date</th>
-                            <th id="title_genre" style ="width:20%">Total</th>
-                            <th id="title_isbn" style ="width:40%">Description</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td><p>Transaction ID</p></td>
-                            <td><p>Date</p></td>
-                            <td><p>Total</p></td>
-                            <td><p>Description</p></td>
-                        </tr>
+                <div class="row">
+                    <table class="table table-striped ">
+                        <thead>
+                            <tr>
+                                <th id="title_column" style ="width:20%">Transaction ID</th>
+                                <th id="title_genre" style ="width:20%">Date</th>
+                                <th id="title_genre" style ="width:20%">Total</th>
+                                <th id="title_isbn" style ="width:40%">Description</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($this->history as $payment) { ?>
+                                <tr>
+                                    <td><p><?php echo $payment['id']; ?></p></td>
+                                    <td><p><?php echo $payment['date']; ?></p></td>
+                                    <td><p><?php echo $payment['payment']; ?></p></td>
+                                    <td><p><?php echo $payment['description']; ?></p></td>
+                                </tr>
+                            <?php } ?>
                     </tbody>              
                 </table>
             </div>
