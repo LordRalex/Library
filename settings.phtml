@@ -43,61 +43,65 @@
                 </div>
                 <div class="col-lg-4">
                     <h2 align="center">Account Settings</h2>
-                    <form>
+                    
                         <div class="row">
                             <div class="col-lg-8">Name: Joe</div>
                             <div class="col-lg-1"></div>
                             <div class="col-lg-3">
-                                <button class="btn btn-primary">Change</button>
+                                <button id="nameChangebtn" class="btn btn-primary" onclick="toggleName();">Change</button>
                             </div>
                         </div><p></p>
-                        <input name ="newname" type ="text" class ="form-control" placeholder ="Type in new name" required><p></p>
+                        <form id="nameChangeinput">
+                            <input name ="newname"  type ="text" class ="form-control" placeholder ="Type in new name" required><p></p>
                         <p align="center"><button class="btn btn-primary" type="submit">Submit</button></p>
                     </form>
-                    <form>
+                    
                         <div class="row">
                             <div class="col-lg-8">Phone: 936-111-1111</div>
                             <div class="col-lg-1"></div>
                             <div class="col-lg-3">
-                                <button class="btn btn-primary">Change</button>
+                                <button id="phoneChangebtn" class="btn btn-primary" onclick="togglePhone();">Change</button>
                             </div>
                         </div><p></p>
-                        <input name ="newphone" type ="text" class ="form-control" placeholder ="Type in new phone number" required><p></p>
+                        <form id="phoneChangeinput">
+                            <input name ="newphone"  type ="text" class ="form-control" placeholder ="Type in new phone number" required><p></p>
                         <p align="center"><button class="btn btn-primary" type="submit">Submit</button></p>
                         <br>
                     </form>
-                    <form>
+                    
                         <div class="row">
                             <div class="col-lg-8">Email: sean.ga@shsu.edu</div>
                             <div class="col-lg-1"></div>
                             <div class="col-lg-3">
-                                <button class="btn btn-primary">Change</button>
+                                <button id="emailChangebtn" class="btn btn-primary"onclick="toggleEmail();" >Change</button>
                             </div>
                         </div><p></p>
-                        <input name ="newemail" type ="text" class ="form-control" placeholder ="Type in new email" required>
+                        <form id="emailChangeinput">
+                            <input name ="newemail"  type ="text" class ="form-control" placeholder ="Type in new email" required>
                         <p></p>
-                        <input name ="retypenewemail" type ="text" class ="form-control" placeholder ="Retype in new email" required><p></p>
+                            <input name ="retypenewemail" type ="text" class ="form-control" placeholder ="Retype in new email" required><p></p>
                         <p align="center"><button class="btn btn-primary" type="submit">Submit</button></p>
                         <br>
                     </form>
-                    <form>
+                    
                         <div class="row">
                             <div class="col-lg-8">Password: ****</div>
                             <div class="col-lg-1"></div>
                             <div class="col-lg-3">
-                                <button class="btn btn-primary">Change</button>
+                                <button id="passwordChangebtn" class="btn btn-primary" onclick="togglePassword();">Change</button>
                             </div>
                         </div><p></p>
-                        <input name ="newpassword" type ="password" class ="form-control" placeholder ="Type in new password" required>
+                        <form id="passwordChangeinput">
+                            <input name ="newpassword" type ="password" class ="form-control" placeholder ="Type in new password" required>
                         <p></p>
-                        <input name ="retypenewpassword" type ="password" class ="form-control" placeholder ="Retype in new password" required><p></p>
+                            <input name ="retypenewpassword" type ="password" class ="form-control" placeholder ="Retype in new password" required><p></p>
                         <p align="center"><button class="btn btn-primary" type="submit">Submit</button></p>
                         <br>
                     </form>
                 </div>
                 <div class="col-lg-4"></div>
             </div>
-            
+
             <div class="footer">
                 <p>© AE97 2014</p>
             </div>
@@ -105,6 +109,24 @@
         </div>
 
         <script src="./assets/ie10-viewport-bug-workaround.js"></script>
-
+        <script src="/assets/jquery.js"></script>
+        <script type="text/javascript">
+            $("#passwordChangeinput").hide();
+            $("#emailChangeinput").hide();
+            $("#phoneChangeinput").hide();
+            $("#nameChangeinput").hide();
+                                    function toggleName() {
+                                        $("#nameChangeinput").toggle();
+                                    }
+                                    function togglePhone() {
+                                        $("#phoneChangeinput").toggle();
+                                    }
+                                    function toggleEmail() {
+                                        $("#emailChangeinput").toggle();
+                                    }
+                                    function togglePassword() {
+                                        $("#passwordChangeinput").toggle();
+                                    }
+        </script>
     </body>
 </html>
