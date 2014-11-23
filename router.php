@@ -30,17 +30,17 @@ $klein->respond('GET', '/resetpw', function($request, $response, $service, $app)
         $service->validateParam('k', 'No reset key provided');
         $database = $app->librarydb;
         $statement = $database->prepare("SELECT passphrase AS k FROM passwordreset "
-                . "INNER JOIN user ON user.uuid = userId "
-                . "WHERE user.email = ?");
+              . "INNER JOIN user ON user.uuid = userId "
+              . "WHERE user.email = ?");
         $statement->execute(array(0 => $request->param('e')));
         $result = $statement->fetchAll(PDO::FETCH_ASSOC);
         if ($result[0]['k'] === $request->param('k')) {
             $database->prepare("DELETE FROM passwordreset "
-                            . "WHERE userId = (SELECT uuid FROM user WHERE user.email = ?)")
-                    ->execute(array(0 => $request->param('e')));
+                        . "WHERE userId = (SELECT uuid FROM user WHERE user.email = ?)")
+                  ->execute(array(0 => $request->param('e')));
             $newpw = generate_random_string(8);
             $database->prepare('UPDATE user SET password = ? WHERE email = ?')
-                    ->execute(array(0 => password_hash($newpw, PASSWORD_BCRYPT), 1 => $request->param('e')));
+                  ->execute(array(0 => password_hash($newpw, PASSWORD_BCRYPT), 1 => $request->param('e')));
             $mailgun = new \Mailgun\Mailgun(getMailgunKey());
             $mailgun->sendMessage('ae97.net', array(
                 'from' => 'library@ae97.net',
@@ -81,9 +81,9 @@ $klein->respond('GET', '/validate', function ($request, $response, $service, $ap
         $result = $statement->fetchAll(PDO::FETCH_ASSOC);
         if (isset($result) && count($result) == 1 && $result[0]['k'] === $request->param('k')) {
             $db->prepare("UPDATE user SET verified = 1 WHERE uuid = ?")
-                    ->execute(array($result['uuid']));
+                  ->execute(array($result['uuid']));
             $db->prepare("DELETE FROM uservalidate WHERE useruuid = ?")
-                    ->execute(array($result['uuid']));
+                  ->execute(array($result['uuid']));
             $service->flash("Your email has been verified, you may now log in");
         } else {
             $service->flash("Invalid user id and key");
@@ -103,8 +103,8 @@ $klein->respond('GET', '/bookview', function($request, $response, $service, $app
     $isbn = $request->param('isbn');
     try {
         $statement = $app->librarydb->prepare("SELECT title, book.desc, book.isbn, author, genre FROM book "
-                . "INNER JOIN bookgenre ON bookgenre.isbn = book.isbn "
-                . "WHERE book.isbn = ? ");
+              . "INNER JOIN bookgenre ON bookgenre.isbn = book.isbn "
+              . "WHERE book.isbn = ? ");
         $statement->execute(array($isbn));
         $statement->setFetchMode(PDO::FETCH_ASSOC);
         $db = $statement->fetchAll();
@@ -114,17 +114,26 @@ $klein->respond('GET', '/bookview', function($request, $response, $service, $app
             return;
         }
         $row = $db[0];
-        $output = array (
+        $output = array(
             'title' => $row['title'],
             'desc' => $row['desc'],
             'author' => $row['author'],
             'isbn' => $row['isbn'],
             'genres' => array()
         );
-        foreach($db as $bookdesc) {
+        foreach ($db as $bookdesc) {
             $output['genres'][] = $bookdesc['genre'];
         }
-        $service->render("bookview.phtml", array('book' => $output));
+        if (isLoggedIn()) {
+            $findInWatchStmt = $app->librarydb->prepare("SELECT count(*) AS inWatch FROM watchlist "
+                  . "WHERE useruuid = ? AND isbn = ?");
+            $findInWatchStmt->execute(array($request->cookies()['uuid'], $isbn));
+            $findInWatchStmt->setFetchMode(PDO::FETCH_ASSOC);
+            $inWatch = $findInWatchStmt->fetch()['inWatch'] == 1 ? true: false;
+        } else {
+            $inWatch = false;
+        }
+        $service->render("bookview.phtml", array('book' => $output, 'inWatch' => $inWatch));
         $response->send();
     } catch (Exception $e) {
         if ($e instanceof PDOException) {
@@ -142,8 +151,8 @@ $klein->respond('GET', '/watchlist', function($request, $response, $service, $ap
     }
     try {
         $statement = $app->librarydb->prepare("SELECT book.title, book.desc, book.isbn, book.author FROM book "
-                . "INNER JOIN watchlist ON watchlist.isbn=book.isbn "
-                . "WHERE watchlist.useruuid = ? ");
+              . "INNER JOIN watchlist ON watchlist.isbn=book.isbn "
+              . "WHERE watchlist.useruuid = ? ");
         $statement->execute(array($request->cookies()['uuid']));
         $statement->setFetchMode(PDO::FETCH_ASSOC);
         $db = $statement->fetchAll();
@@ -165,7 +174,7 @@ $klein->respond('GET', '/watchlist-delete', function($request, $response, $servi
     $isbn = $request->param('isbn');
     try {
         $statement = $app->librarydb->prepare("DELETE FROM watchlist "
-                . "WHERE useruuid = ? AND isbn = ? ");
+              . "WHERE useruuid = ? AND isbn = ? ");
         $statement->execute(array($request->cookies()['uuid'], $isbn));
     } catch (Exception $e) {
         if ($e instanceof PDOException) {
@@ -183,7 +192,7 @@ $klein->respond('GET', '/watchlist-add', function($request, $response, $service,
     $isbn = $request->param('isbn');
     try {
         $statement = $app->librarydb->prepare("INSERT INTO watchlist "
-                . "VALUES(?,?)");
+              . "VALUES(?,?)");
         $statement->execute(array($request->cookies()['uuid'], $isbn));
     } catch (Exception $e) {
         if ($e instanceof PDOException) {
@@ -200,15 +209,15 @@ $klein->respond('GET', '/payment', function($request, $response, $service, $app)
     }
     try {
         $historyStatement = $app->librarydb->prepare("SELECT id, payment, date, description "
-                . "FROM transactions "
-                . "WHERE user = ?");
+              . "FROM transactions "
+              . "WHERE user = ?");
         $historyStatement->execute(array($request->cookies()['uuid']));
         $historyStatement->setFetchMode(PDO::FETCH_ASSOC);
         $history = $historyStatement->fetchAll();
 
         $totalStatement = $app->librarydb->prepare("SELECT SUM(payment) AS total "
-                . "FROM transactions "
-                . "WHERE user = ?");
+              . "FROM transactions "
+              . "WHERE user = ?");
         $totalStatement->execute(array($request->cookies()['uuid']));
         $totalStatement->setFetchMode(PDO::FETCH_ASSOC);
         $totalArray = $totalStatement->fetch();
@@ -281,30 +290,30 @@ $klein->respond('POST', '/search', function($request, $response, $service, $app)
         switch ($request->param("type")) {
             case "author":
                 $statement = $database->prepare("SELECT DISTINCT title, book.desc, isbn, author FROM book "
-                        . "WHERE author LIKE ?"
-                        . "LIMIT 30");
+                      . "WHERE author LIKE ?"
+                      . "LIMIT 30");
                 $statement->execute(array(0 => "%" . $request->param("query") . "%"));
                 break;
 
             case "isbn":
                 $statement = $database->prepare("SELECT DISTINCT title, book.desc, isbn, author FROM book "
-                        . "WHERE book.isbn = ?"
-                        . "LIMIT 30");
+                      . "WHERE book.isbn = ?"
+                      . "LIMIT 30");
                 $statement->execute(array(0 => $request->param("query")));
                 break;
 
             case "title":
                 $statement = $database->prepare("SELECT DISTINCT title, book.desc, isbn, author FROM book "
-                        . "WHERE title LIKE ? "
-                        . "LIMIT 30");
+                      . "WHERE title LIKE ? "
+                      . "LIMIT 30");
                 $statement->execute(array(0 => "%" . $request->param("query") . "%"));
                 break;
 
             case "genre":
                 $statement = $database->prepare("SELECT DISTINCT title, book.desc, book.isbn, author FROM book "
-                        . "INNER JOIN bookgenre ON bookgenre.isbn = book.isbn "
-                        . "WHERE genre = ? "
-                        . "LIMIT 30");
+                      . "INNER JOIN bookgenre ON bookgenre.isbn = book.isbn "
+                      . "WHERE genre = ? "
+                      . "LIMIT 30");
                 $statement->execute(array(0 => $request->param("query")));
                 break;
 
@@ -330,8 +339,8 @@ $klein->respond('POST', '/resetpassword', function($request, $response, $service
         if (count($uuid) === 1 && isset($uuid[0])) {
             $id = $uuid[0]['uuid'];
             $db->prepare("INSERT INTO passwordreset (userId, passphrase) VALUES (?, ?) "
-                            . "ON DUPLICATE KEY UPDATE passphrase = ?")
-                    ->execute(array($id, $key, $key));
+                        . "ON DUPLICATE KEY UPDATE passphrase = ?")
+                  ->execute(array($id, $key, $key));
             $mailgun = new \Mailgun\Mailgun(getMailgunKey());
             $mailgun->sendMessage('ae97.net', array(
                 'from' => 'library@ae97.net',
@@ -375,16 +384,16 @@ $klein->respond('POST', '/register', function ($request, $response, $service, $a
         }
         $uuid = getGUID();
         $db->prepare("INSERT INTO user (uuid, name, password, email, phone) VALUES (?, ?, ?, ?, ?)")
-                ->execute(array(
-                    $uuid,
-                    $request->param('name'),
-                    password_hash($request->param('password'), PASSWORD_BCRYPT),
-                    $request->param('email'),
-                    $phone
+              ->execute(array(
+                  $uuid,
+                  $request->param('name'),
+                  password_hash($request->param('password'), PASSWORD_BCRYPT),
+                  $request->param('email'),
+                  $phone
         ));
         $validationKey = generate_random_string(36);
         $db->prepare("INSERT INTO uservalidate (useruuid, validation) VALUES (?, ?)")
-                ->execute(array($uuid, $validationKey));
+              ->execute(array($uuid, $validationKey));
 
         $service->flash('Your account has been created, check your email for the verification');
         $mailgun = new \Mailgun\Mailgun(getMailgunKey());
@@ -446,7 +455,7 @@ function randBook($app) {
     $statement->execute();
     $books = $statement->fetchALL(PDO::FETCH_ASSOC);
     $randBook = $database->prepare("SELECT title, author, book.desc, isbn FROM book "
-            . "WHERE isbn = ? LIMIT 1");
+          . "WHERE isbn = ? LIMIT 1");
     $randBook->execute(array(0 => $books[mt_rand(0, count($books) - 1)]['isbn']));
     return $randBook->fetchALL(PDO::FETCH_ASSOC)[0];
 }
@@ -458,10 +467,10 @@ function getGUID() {
         $charid = strtoupper(md5(uniqid(rand(), true)));
         $hyphen = chr(45); // "-"
         $uuid = substr($charid, 0, 8) . $hyphen
-                . substr($charid, 8, 4) . $hyphen
-                . substr($charid, 12, 4) . $hyphen
-                . substr($charid, 16, 4) . $hyphen
-                . substr($charid, 20, 12);
+              . substr($charid, 8, 4) . $hyphen
+              . substr($charid, 12, 4) . $hyphen
+              . substr($charid, 16, 4) . $hyphen
+              . substr($charid, 20, 12);
         return $uuid;
     }
 }
