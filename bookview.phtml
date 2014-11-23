@@ -49,7 +49,7 @@
                     <p><strong>Title:</strong> <?php echo $this->book['title']; ?></p>
                     <p><strong>Author:</strong> <?php echo $this->book['author']; ?></p>
                     <p><strong>Description:</strong> <?php echo $this->book['desc']; ?></p>
-                    <strong>Genre: </strong><br>
+                    <strong>Genres:</strong> <?php echo implode(', ', $this->book['genres']); ?><br>
                     <?php if (isLoggedIn()) { ?>
                             <p align="center"><a class="btn btn-primary" role="button" href="/watchlist-add?isbn=<?php echo $this->book['isbn']; ?>">Add</a>
                                 <a class="btn btn-primary" role="button" href="/watchlist-delete?isbn=<?php echo $this->book['isbn']; ?>">Remove</a>

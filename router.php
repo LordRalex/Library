@@ -102,19 +102,29 @@ $klein->respond('GET', '/bookview', function($request, $response, $service, $app
     }
     $isbn = $request->param('isbn');
     try {
-        $statement = $app->librarydb->prepare("SELECT title, book.desc, book.isbn, author FROM book "
-                //. "INNER JOIN bookgenre ON bookgenre.isbn = book.isbn "
-                . "WHERE isbn = ? ");
+        $statement = $app->librarydb->prepare("SELECT title, book.desc, book.isbn, author, genre FROM book "
+                . "INNER JOIN bookgenre ON bookgenre.isbn = book.isbn "
+                . "WHERE book.isbn = ? ");
         $statement->execute(array($isbn));
         $statement->setFetchMode(PDO::FETCH_ASSOC);
         $db = $statement->fetchAll();
 
-        if (count($db) != 1) {
+        if (count($db) == 0) {
             $response->redirect('/search', 302)->send();
             return;
         }
-        $book = $db[0];
-        $service->render("bookview.phtml", array('book' => $book));
+        $row = $db[0];
+        $output = array (
+            'title' => $row['title'],
+            'desc' => $row['desc'],
+            'author' => $row['author'],
+            'isbn' => $row['isbn'],
+            'genres' => array()
+        );
+        foreach($db as $bookdesc) {
+            $output['genres'][] = $bookdesc['genre'];
+        }
+        $service->render("bookview.phtml", array('book' => $output));
         $response->send();
     } catch (Exception $e) {
         if ($e instanceof PDOException) {
@@ -445,7 +455,6 @@ function getGUID() {
     if (function_exists('com_create_guid')) {
         return com_create_guid();
     } else {
-        mt_srand((double) microtime() * 10000); //optional for php 4.2.0 and up.
         $charid = strtoupper(md5(uniqid(rand(), true)));
         $hyphen = chr(45); // "-"
         $uuid = substr($charid, 0, 8) . $hyphen
