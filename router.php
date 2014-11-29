@@ -16,15 +16,16 @@ $klein->respond(function($request, $response, $service, $app) {
     });
 });
 
-$klein->respond('GET', '/logout', function($request, $response, $service, $app) {
+$klein->respond('GET', '/logout', function($request, $response, $service, $app) use ($klein) {
     $uuid = $request->cookies()['uuid'];
     $response->cookie('session', null);
     $response->cookie('email', null);
     $app->librarydb->prepare("UPDATE user SET session = NULL WHERE uuid = ?")->execute(array($uuid));
     $response->redirect('/', 302)->send();
+    $klein->skipRemaining();
 });
 
-$klein->respond('GET', '/resetpw', function($request, $response, $service, $app) {
+$klein->respond('GET', '/resetpw', function($request, $response, $service, $app) use ($klein) {
     try {
         $service->validateParam('e', 'No email provided')->isEmail();
         $service->validateParam('k', 'No reset key provided');
@@ -53,7 +54,6 @@ $klein->respond('GET', '/resetpw', function($request, $response, $service, $app)
         } else {
             $service->flash("Reset link not valid");
             $response->redirect('/login', 302);
-            return;
         }
     } catch (Exception $e) {
         if ($e instanceof PDOException) {
@@ -61,11 +61,11 @@ $klein->respond('GET', '/resetpw', function($request, $response, $service, $app)
         }
         $service->flash('Error: ' . $e->getMessage());
         $response->redirect('/login', 302);
-        return;
     }
+    $klein->skipRemaining();
 });
 
-$klein->respond('GET', '/validate', function ($request, $response, $service, $app) {
+$klein->respond('GET', '/validate', function ($request, $response, $service, $app) use ($klein) {
     try {
         $service->validateParam('u', "UUID is not valid")->notNull();
         $service->validateParam('k', "Key is not valid")->notNull()->isLen(36);
@@ -93,6 +93,7 @@ $klein->respond('GET', '/validate', function ($request, $response, $service, $ap
         error_log($ex);
     }
     $response->redirect('/login', 302)->send();
+    $klein->skipRemaining();
 });
 
 $klein->respond('GET', '/bookview', function($request, $response, $service, $app) {
@@ -144,7 +145,7 @@ $klein->respond('GET', '/bookview', function($request, $response, $service, $app
     }
 });
 
-$klein->respond('GET', '/watchlist', function($request, $response, $service, $app) {
+$klein->respond('GET', '/watchlist', function($request, $response, $service, $app) use ($klein) {
     if (!isLoggedIn()) {
         $response->redirect('/login', 302)->send();
         return;
@@ -164,9 +165,10 @@ $klein->respond('GET', '/watchlist', function($request, $response, $service, $ap
     }
     $service->render("watchlist.phtml", array('books' => $db));
     $response->send();
+    $klein->skipRemaining();
 });
 
-$klein->respond('GET', '/watchlist-delete', function($request, $response, $service, $app) {
+$klein->respond('GET', '/watchlist-delete', function($request, $response, $service, $app) use ($klein) {
     if ($request->param('isbn') == null) {
         $response->redirect('/watchlist', 302)->send();
         return;
@@ -182,9 +184,10 @@ $klein->respond('GET', '/watchlist-delete', function($request, $response, $servi
         }
     }
     $response->redirect('/watchlist', 302)->send();
+    $klein->skipRemaining();
 });
 
-$klein->respond('GET', '/watchlist-add', function($request, $response, $service, $app) {
+$klein->respond('GET', '/watchlist-add', function($request, $response, $service, $app) use ($klein) {
     if ($request->param('isbn') == null) {
         $response->redirect('/watchlist', 302)->send();
         return;
@@ -200,9 +203,10 @@ $klein->respond('GET', '/watchlist-add', function($request, $response, $service,
         }
     }
     $response->redirect('/watchlist', 302)->send();
+    $klein->skipRemaining();
 });
 
-$klein->respond('GET', '/payment', function($request, $response, $service, $app) {
+$klein->respond('GET', '/payment', function($request, $response, $service, $app) use ($klein) {
     if (!isLoggedIn()) {
         $response->redirect('/login', 302)->send();
         return;
@@ -229,10 +233,21 @@ $klein->respond('GET', '/payment', function($request, $response, $service, $app)
     }
     $service->render("payment.phtml", array('total' => $total, 'history' => $history));
     $response->send();
+    $klein->skipRemaining();
 });
 
-$klein->respond('GET', '/', function($request, $response, $service, $app) {
+$klein->respond('/admin', function($request, $response) use ($klein) {
+    $response->redirect('/admin/', 302)->send();
+    $klein->skipRemaining();
+});
+
+$klein->with('/admin', function() use ($klein) {
+    include('admin.php');
+});
+
+$klein->respond('GET', '/', function($request, $response, $service, $app) use ($klein) {
     $service->render("home.phtml", array('randomBook' => randBook($app)));
+    $klein->skipRemaining();
 });
 
 $klein->respond('GET', '/[a:page]', function ($request, $response, $service, $app) {
@@ -413,7 +428,6 @@ $klein->respond('POST', '/register', function ($request, $response, $service, $a
     }
 });
 
-
 $klein->dispatch();
 
 function generate_random_string($length) {
@@ -438,10 +452,12 @@ function isLoggedIn() {
         $statement = $db->prepare("SELECT uuid, session, rights FROM user WHERE uuid = ?");
         $statement->execute(array($uuid));
         $result = $statement->fetchAll(PDO::FETCH_ASSOC);
-        if (isset($result) && count($result) == 1) {
+        if (isset($result) && count($result) == 1 && $result[0]['session'] === $session) {
             return $result[0]['rights'];
         } else {
-            return false;
+            $_COOKIE['session'] = null;
+            $_COOKIE['uuid'] = null;
+            return false;            
         }
     } catch (PDOException $ex) {
         error_log($ex);
