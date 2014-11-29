@@ -87,3 +87,46 @@ $klein->respond('GET', '/bookstatus', function($request, $response, $service, $a
         return;
     }
 });
+
+$klein->respond('POST', '/checkout', function($request, $response, $service, $app) {
+    try {
+        $service->validateParam('email', 'No valid email provided')->isEmail();
+        $service->validateParam('book', "No book uuid specified")->notNull();
+        $db = $app->librarydb;
+        $date = new DateTime();
+        $date->modify('+2 week');
+        $returnDate = $date->format('Y-m-d');
+        $db->prepare('INSERT INTO checkout (bookuuid, useruuid, returndate) '
+                        . 'VALUES (?, '
+                        . '(SELECT uuid FROM user WHERE email = ?) '
+                        . ', ?)')
+                ->execute(array(
+                    $request->param('book'),
+                    $request->param('email'),
+                    $returnDate
+        ));
+        $service->flash('Due date: ' . $returnDate);
+    } catch (Exception $ex) {
+        $service->flash($ex->getMessage());
+    }
+    $service->refresh();
+});
+
+$klein->respond('POST', '/checkin', function($request, $response, $service, $app) {
+    try {
+        $service->validateParam('book', "No book uuid specified")->notNull();
+        $db = $app->librarydb;
+        $date = new DateTime();
+        $returnedDate = $date->format('Y-m-d');
+        $db->prepare('UPDATE checkout SET returnedDate = ? '
+                        . ' WHERE bookuuid = ? AND returnedDate IS NULL LIMIT 1')
+                ->execute(array(
+                    $returnedDate,
+                    $request->param('book')                    
+        ));
+        $service->flash('Book returned');
+    } catch (Exception $ex) {
+        $service->flash($ex->getMessage());
+    }
+    $service->refresh();
+});
