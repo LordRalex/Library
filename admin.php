@@ -28,7 +28,32 @@ $klein->respond('GET', '/addbook', function($request, $response, $service, $app)
 });
 
 $klein->respond('POST', '/addbook', function($request, $response, $service, $app) {
-
+    try {
+        $service->validateParam('isbn', 'No ISBN provided')->notNull();
+        $db = $app->librarydb;
+        $isbn = $request->param('isbn');
+        if ($request->param('new', false)) {
+            $service->validateParam('title', 'No book title specified')->notNull();
+            $service->validateParam('desc', 'No book description provided')->notNull();
+            $service->validateParam('author', 'No author specified')->notNull();
+            $service->validateParam('genres', 'No genre specified')->notNull();
+            $db->prepare("INSERT INTO book VALUES (?, ?, ?, ?)")
+                    ->execute(array($isbn, $request->param('title'), $request->param('desc'), $request->param('author')));
+            $genres = explode(',', $request->param('genres'));
+            foreach ($genres as $genre) {
+                $db->prepare("INSERT INTO bookgenre VALUES (?, ?)")
+                        ->execute(array($isbn, $genre));
+            }
+            $db->prepare("INSERT INTO bookuuid (uuid, isbn) VALUES (?, ?)")
+                    ->execute(array(getGUID(), $isbn));
+        } else {
+            $db->prepare("INSERT INTO bookuuid (uuid, isbn) VALUES (?, ?)")
+                    ->execute(array(getGUID(), $isbn));
+        }
+    } catch (Exception $ex) {
+        $service->flash($ex->getMessage());
+    }
+    $service->refresh();
 });
 
 $klein->respond('GET', '/bookstatus', function($request, $response, $service, $app) {
