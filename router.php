@@ -231,6 +231,9 @@ $klein->respond('GET', '/payment', function($request, $response, $service, $app)
         $totalStatement->setFetchMode(PDO::FETCH_ASSOC);
         $totalArray = $totalStatement->fetch();
         $total = $totalArray['total'];
+        if ($total == '')  {
+            $total = 0;
+        }
     } catch (Exception $e) {
         if ($e instanceof PDOException) {
             error_log($e);
@@ -248,6 +251,24 @@ $klein->respond('/admin', function($request, $response) use ($klein) {
 
 $klein->with('/admin', function() use ($klein) {
     include('admin.php');
+});
+
+$klein->respond('GET', '/settings', function($request, $response, $service, $app) {
+    if (!isLoggedIn()) {
+        $response->redirect('/login', 302)->send();
+        return;
+    }
+    try {
+        $db = $app->librarydb;
+        $statement = $db->prepare("SELECT name, email, phone FROM user WHERE uuid = ?");
+        $statement->execute(array($_COOKIE['uuid']));
+        $data = $statement->fetch();
+        $service->render("setting.phtml", array('user' => $data));
+        $response->send();
+    } catch (PDOException $ex) {
+        error_log($ex);
+        $response->redirect("/home", 302)->send();
+    }
 });
 
 $klein->respond('GET', '/', function($request, $response, $service, $app) use ($klein) {
