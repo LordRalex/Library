@@ -32,33 +32,35 @@
                 </ul>
             </div>
             <?php if (isLoggedIn()) { ?>
-            <div class="masthead">
+                <div class="masthead">
                     <ul class="nav nav-justified">
                         <li><a href="/watchlist">Watchlist</a></li>
                         <li><a href="/payment">Payment</a></li>
                         <li><a href="/settings">Account Settings</a></li>
                     </ul>
                 </div>
-            <?php }
-            ?>
+            <?php } ?>
 
             <div class="row">
-                <div class="col-lg-4"></div>
-                <div class="col-lg-4">
-                    <h2 align="center">Book</h2>
-                    <p><strong>Title:</strong> <?php echo $this->book['title']; ?></p>
-                    <p><strong>Author:</strong> <?php echo $this->book['author']; ?></p>
-                    <p><strong>Description:</strong> <?php echo $this->book['desc']; ?></p>
-                    <strong>Genres:</strong> <?php echo implode(', ', $this->book['genres']); ?><br>
-                    <br>
+                <div class="col-lg-2"></div>
+                <div class="col-lg-8">
+                    <h2 align="center">Book - ISBN: <?php echo $this->book['isbn']; ?></h2>
+                    <p><h3>Title:</h3> <?php echo $this->book['title']; ?></p>
+                    <p><h3>Author:</h3> <?php echo $this->book['author']; ?></p>
+                    <p><h3>Description:</h3> <?php echo $this->book['desc']; ?></p>
+                    <p><h3>Genres:</h3> <?php echo implode(', ', $this->book['genres']); ?></p>
+                    <p><h3>In stock:</h3> <?php echo $this->inStock; ?></p>
+                </div>
+                <div class="col-lg-2">
+                    <h3></h3>
                     <?php if (isLoggedIn()) { ?>
-                            <p align="center">
-                                <?php if($this->inWatch) {?>
-                                    <a class="btn btn-primary" role="button" href="/watchlist-delete?isbn=<?php echo $this->book['isbn']; ?>">Remove</a>
-                                <?php } else {?>
-                                    <a class="btn btn-primary" role="button" href="/watchlist-add?isbn=<?php echo $this->book['isbn']; ?>">Add</a>
-                                <?php } ?>
-                            </p>
+                        <p align="center">
+                            <?php if ($this->inWatch) { ?>
+                                <a class="btn btn-primary" role="button" href="/watchlist-delete?isbn=<?php echo $this->book['isbn']; ?>">Remove from watchlist</a>
+                            <?php } else { ?>
+                                <a class="btn btn-primary" role="button" href="/watchlist-add?isbn=<?php echo $this->book['isbn']; ?>">Add to watchlist</a>
+                            <?php } ?>
+                        </p>
                     <?php } ?>
                 </div>
             </div>
