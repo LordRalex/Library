@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="description" content="">
+        <meta name="author" content="">
+        <link rel="icon" href="/assets/favicon.ico">
+        <title>Fee Payment</title>
+        <link href="/assets/bootstrap.min.css" rel="stylesheet">
+        <link href="/assets/justified-nav.css" rel="stylesheet">
+    </head>
+
+    <body>
+        <p><strong>Fee total:</strong> <?php $this->request->param('total'); ?></p>
+
+        <script type="text/javascript">
+            window.onunload = refreshOld;
+
+            function refreshOld() {
+                window.opener.location.reload();
+            }
+        </script>
+
+    </body>
+
+
+</html>
