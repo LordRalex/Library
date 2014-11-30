@@ -10,13 +10,12 @@
         <link href="/assets/bootstrap.min.css" rel="stylesheet">
         <link href="/assets/bootstrap-theme.css" rel="stylesheet">
         <link href="/assets/justified-nav.css" rel="stylesheet">
-    
+
     </head>
 
     <script src="/assets/jquery.js"></script>
     <script src="/assets/bootstrap.min.js"></script>
     <script src="/assets/knockout.js"></script>
-    <script src="/assets/search.js"></script>
     <script type="text/javascript">
         var viewModel = {
             tableLoaded: ko.observable(false),
@@ -38,32 +37,52 @@
                     <li><a href="/logout">Logout</a></li>
                 </ul>
             </div>
-
-        <div class="col-lg-12">
-            <h3 class="text-center" style="padding-top: 5%">Check Out Books</h3>
-            <h4 class="text-center">Enter Book ISBN</h4>
-            <input id="query" type="text" class="form-control" required onkeypress="searchKeyPress(event);">
-            <div  class="jumbotron">
-                <button class="btn btn-success" id="searchButton">Search</button>
+            <div class='row'>
+                <div class='col-lg-4'></div>
+                <div class="col-lg-4">
+                    <?php
+                    foreach ($this->flashes() as $type => $messages):
+                        foreach ($messages as $msg):
+                            echo '<h5 class="alert alert-danger">' . $msg . '</h5>';
+                        endforeach;
+                    endforeach;
+                    ?>
+                    <h3 class="text-center" style="padding-top: 5%">Check Out Books</h3>
+                    <p>
+                    <h4 class='text-center'>Enter user's email</p>
+                        <input required id="email" name="email" type="text" class="form-control" placeholder="User email"
+                        <?php if (isset($this->email)) { ?>
+                                   value='<?php echo $this->email; ?>'
+                               <?php } ?>
+                               >
+                        <h4 class="text-center">Enter Book ISBN</h4>
+                        <input id="query" type="text" class="form-control" required onkeypress="searchKeyPress(event);">
+                        <br>
+                        <button class="btn btn-success" id="searchButton">Search</button>
+                </div>
+                <div class='col-lg-4'></div>
             </div>
-        </div>
 
-        <div class="row">
-            <table data-bind="visible: tableLoaded" class="table table-striped">
-                <thead>
-                    <tr>
-                        <th id="title_column" style ="width:25%">UUID</th>
-                        <th id="title_isbn" style ="width:25%"> </th>
-                    </tr>
-                </thead>
-                <tbody data-bind="foreach: bookTable" id="booktable">
-                    <tr>
-                        <td><p data-bind="text: $data.uuid"></p></td>
-                        <td><a data-bind="attr: {href:'/bookview?isbn='+$data.isbn}" class="btn btn-success">Return</a></td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
+            <div class="row" data-bind="visible: tableLoaded">
+                <div class="col-lg-3"></div>
+                <div class="col-lg-6">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th id="title_column" style ="width:75%">UUID</th>
+                                <th id="title_isbn" style ="width:25%"></th>
+                            </tr>
+                        </thead>
+                        <tbody data-bind="foreach: bookTable" id="booktable">
+                            <tr>
+                                <td><p data-bind="text: $data.uuid"></p></td>
+                                <td><a data-bind="click: submitCheckout" class="btn btn-success">Check out</a></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="col-lg-3"></div>
+            </div>
 
             <div class="footer">
                 <p>© AE97 2014</p>
@@ -73,7 +92,7 @@
 
         <script src="/assets/ie10-viewport-bug-workaround.js"></script>
         <script type="text/javascript">
-                 ko.applyBindings(viewModel);
+                            ko.applyBindings(viewModel);
         </script>
 
         <script type="text/javascript">
@@ -83,13 +102,52 @@
                 $("#searchTypeButton").val(tag.attr("value"));
             });
             $("#searchButton").on('click', function () {
-                var type = $("#searchTypeButton").val();
                 var query = $("#query").val();
                 if (query === null || query.trim() === "") {
-                return;
+                    return;
+                }
+                search(query);
+            });
+
+            function search(query) {
+                viewModel.tableLoaded(false);
+                var posting = $.post('/admin/checkout-search', {'query': query}, "json");
+                posting.done(parseData);
             }
-            search(type, query);
-        });
+
+            function parseData(data) {
+                var json = JSON.parse(data);
+                if (json.msg === "success") {
+                    viewModel.bookTable.removeAll();
+                    for (var counter = 0; counter < json.data.length; counter++) {
+                        var book = json.data[counter];
+                        viewModel.bookTable.push({
+                            'uuid': book.bookuuid
+                        });
+                    }
+                }
+                viewModel.tableLoaded(true);
+            }
+
+            function submitCheckout(data, event) {
+                console.info(data.uuid);
+                var post = $.post('/admin/checkout-submit', {'book': data.uuid, 'email': $("#email").val()}, 'json');
+                post.done(refresh);
+            }
+
+            function searchKeyPress(e) {
+                if (typeof e == 'undefined' && window.event) {
+                    e = window.event;
+                }
+                if (e.keyCode == 13)
+                {
+                    document.getElementById('searchButton').click();
+                }
+            }
+
+            function refresh() {
+                window.location.replace('/admin/checkout?email=' + $("#email").val());
+            }
         </script>
 
     </body>

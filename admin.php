@@ -13,7 +13,11 @@ $klein->respond('GET', '/', function($request, $response, $service, $app) {
 });
 
 $klein->respond('GET', '/checkout', function($request, $response, $service, $app) {
-    $service->render('checkout.phtml');
+    if ($request->param('email') !== null) {
+        $service->render('checkout.phtml', array('email' => $request->param('email')));
+    } else {
+        $service->render('checkout.phtml');
+    }
     $response->send();
 });
 
@@ -88,7 +92,7 @@ $klein->respond('GET', '/bookstatus', function($request, $response, $service, $a
     }
 });
 
-$klein->respond('POST', '/checkout', function($request, $response, $service, $app) {
+$klein->respond('POST', '/checkout-submit', function($request, $response, $service, $app) {
     try {
         $service->validateParam('email', 'No valid email provided')->isEmail();
         $service->validateParam('book', "No book uuid specified")->notNull();
@@ -109,7 +113,6 @@ $klein->respond('POST', '/checkout', function($request, $response, $service, $ap
     } catch (Exception $ex) {
         $service->flash($ex->getMessage());
     }
-    $service->refresh();
 });
 
 $klein->respond('GET', '/checkin-return', function($request, $response, $service, $app) {
@@ -118,11 +121,12 @@ $klein->respond('GET', '/checkin-return', function($request, $response, $service
         $db = $app->librarydb;
         $date = new DateTime();
         $returnedDate = $date->format('Y-m-d');
-        $db->prepare('UPDATE checkout SET returned = ? '
+        $db->prepare('UPDATE checkout SET returned = ?, handler = ? '
                         . ' WHERE transaction = ?')
                 ->execute(array(
                     $returnedDate,
-                    $request->param('id')                    
+                    $_COOKIE['uuid'],
+                    $request->param('id')
         ));
         $service->flash('Book returned');
     } catch (Exception $ex) {
@@ -149,5 +153,28 @@ $klein->respond('POST', '/checkin-search', function($request, $response, $servic
         error_log($ex);
         echo json_encode(array("msg" => "failed", "error" => "Database returned an error"));
     }
-    
+});
+
+$klein->respond('POST', '/checkout-search', function($request, $response, $service, $app) {
+    if ($request->param("query") === null) {
+        echo json_encode(array("msg" => "failed", "error" => "No search arguments provided"));
+        return;
+    }
+    try {
+        $isbn = $request->param('query');
+        $database = $app->librarydb;
+        $statement = $database->prepare('SELECT uuid AS bookuuid FROM bookuuid '
+                . 'WHERE isbn = ? AND uuid NOT IN '
+                . '( '
+                . 'SELECT bookuuid FROM checkout '
+                . 'INNER JOIN bookuuid ON bookuuid.uuid = checkout.bookuuid '
+                . 'WHERE isbn = ? AND returned IS NULL '
+                . ')');
+        $statement->execute(array($isbn, $isbn));
+        $books = $statement->fetchALL(PDO::FETCH_ASSOC);
+        echo json_encode(array("msg" => "success", "data" => $books));
+    } catch (PDOException $ex) {
+        error_log($ex);
+        echo json_encode(array("msg" => "failed", "error" => "Database returned an error"));
+    }
 });
