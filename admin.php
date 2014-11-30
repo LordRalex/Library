@@ -111,6 +111,7 @@ $klein->respond('POST', '/checkout-submit', function($request, $response, $servi
         ));
         $service->flash('Due date: ' . $returnDate);
     } catch (Exception $ex) {
+        error_log($ex);
         $service->flash('Could not check out that book');
     }
 });
@@ -131,7 +132,7 @@ $klein->respond('GET', '/checkin-return', function($request, $response, $service
         $service->flash('Book returned');
     } catch (Exception $ex) {
         $service->flash('Could not return book');
-        error_log($ex->getMessage());
+        error_log($ex);
     }
     $service->back();
 });
