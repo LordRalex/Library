@@ -112,21 +112,42 @@ $klein->respond('POST', '/checkout', function($request, $response, $service, $ap
     $service->refresh();
 });
 
-$klein->respond('POST', '/checkin', function($request, $response, $service, $app) {
+$klein->respond('GET', '/checkin-return', function($request, $response, $service, $app) {
     try {
-        $service->validateParam('book', "No book uuid specified")->notNull();
+        $service->validateParam('id', "No book uuid specified")->notNull();
         $db = $app->librarydb;
         $date = new DateTime();
         $returnedDate = $date->format('Y-m-d');
-        $db->prepare('UPDATE checkout SET returnedDate = ? '
-                        . ' WHERE bookuuid = ? AND returnedDate IS NULL LIMIT 1')
+        $db->prepare('UPDATE checkout SET returned = ? '
+                        . ' WHERE transaction = ?')
                 ->execute(array(
                     $returnedDate,
-                    $request->param('book')                    
+                    $request->param('id')                    
         ));
         $service->flash('Book returned');
     } catch (Exception $ex) {
-        $service->flash($ex->getMessage());
+        error_log($ex->getMessage());
     }
-    $service->refresh();
+    $service->back();
+});
+
+$klein->respond('POST', '/checkin-search', function($request, $response, $service, $app) {
+    if ($request->param("query") === null) {
+        echo json_encode(array("msg" => "failed", "error" => "No search arguments provided"));
+        return;
+    }
+    try {
+        $database = $app->librarydb;
+        $statement = $database->prepare('SELECT transaction, bookuuid, email, returndate FROM checkout'
+                . ' INNER JOIN bookuuid ON bookuuid.uuid = checkout.bookuuid'
+                . ' INNER JOIN user ON useruuid = user.uuid '
+                . 'WHERE isbn = ? AND returned IS NULL');
+        $statement->execute(array($request->param('query')));
+        $books = $statement->fetchALL(PDO::FETCH_ASSOC);
+        echo json_encode(array("msg" => "success", "data" => $books));
+    } catch (PDOException $ex) {
+        error_log($ex);
+        echo json_encode(array("msg" => "failed", "error" => "Database returned an error"));
+    }
+    
 });
