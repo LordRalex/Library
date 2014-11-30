@@ -244,6 +244,26 @@ $klein->respond('GET', '/payment', function($request, $response, $service, $app)
     $klein->skipRemaining();
 });
 
+$klein->respond('POST', '/pay', function($request, $response, $service, $app) {
+    if (!isLoggedIn()) {
+        echo false;
+        return;
+    }
+    if ($request->param('ccnumber')==null){
+        echo false;
+        return;
+    }
+    try {
+        $app->librarydb->prepare('INSERT INTO transactions (user, payment, description) VALUES (?,?,?)')
+                ->execute(array($_COOKIE['uuid'],$request->param('total'),'ccpayment: '.$request->param('ccnumber')));
+    } catch (PDOException $ex) {
+        error_log($ex->getMessage());
+        echo false; 
+        return;
+    }
+    echo true;
+}); 
+
 $klein->respond('/admin', function($request, $response) use ($klein) {
     $response->redirect('/admin/', 302)->send();
     $klein->skipRemaining();
@@ -274,6 +294,11 @@ $klein->respond('GET', '/settings', function($request, $response, $service, $app
 $klein->respond('GET', '/', function($request, $response, $service, $app) use ($klein) {
     $service->render("home.phtml", array('randomBook' => randBook($app)));
     $klein->skipRemaining();
+});
+
+$klein->respond('GET', '/pay', function($request, $response, $service) {
+    $service->render("pay.phtml", array('total' => $request->param('total')));
+    $response->send();
 });
 
 $klein->respond('GET', '/[a:page]', function ($request, $response, $service, $app) {

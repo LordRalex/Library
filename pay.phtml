@@ -11,14 +11,29 @@
         <link href="/assets/justified-nav.css" rel="stylesheet">
     </head>
 
+    <script src="/assets/jquery.js"></script>
+
     <body>
-        <p><strong>Fee total:</strong> <?php $this->request->param('total'); ?></p>
+
+        <p><strong>Fee total:</strong> <?php echo $this->total; ?></p>
+        <h3 class = "form-signin-heading">Login</h3>
+        <input id = "ccinput" name = "ccnumber" type = "text" class = "form-control" placeholder = "Credit Card Number" required autofocus>
+        <button class = "btn btn-block" onclick="submit()">Pay</button>
 
         <script type="text/javascript">
             window.onunload = refreshOld;
 
             function refreshOld() {
                 window.opener.location.reload();
+            }
+            function submit() {
+                var posting = $.post('/pay', {ccnumber: $("#ccinput").val(), total: <?php echo $this->total; ?>}, 'json');
+                posting.done(closeIfDone);
+            }
+            function closeIfDone(data){
+                if (data === '1'){
+                    window.close();
+                }
             }
         </script>
 
