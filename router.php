@@ -263,7 +263,7 @@ $klein->respond('GET', '/settings', function($request, $response, $service, $app
         $statement = $db->prepare("SELECT name, email, phone FROM user WHERE uuid = ?");
         $statement->execute(array($_COOKIE['uuid']));
         $data = $statement->fetch();
-        $service->render("setting.phtml", array('user' => $data));
+        $service->render("settings.phtml", array('user' => $data));
         $response->send();
     } catch (PDOException $ex) {
         error_log($ex);

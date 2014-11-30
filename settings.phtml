@@ -47,7 +47,7 @@
                     ?>
 
                     <div class="row">
-                        <div class="col-lg-8">Name: Joe</div>
+                        <div class="col-lg-8">Name: <?php echo $this->user['name']; ?></div>
                         <div class="col-lg-1"></div>
                         <div class="col-lg-3">
                             <button id="nameChangebtn" class="btn btn-primary" onclick="toggleName();">Change</button>
@@ -60,7 +60,7 @@
                     </form>
 
                     <div class="row">
-                        <div class="col-lg-8">Phone: 936-111-1111</div>
+                        <div class="col-lg-8">Phone: <?php echo $this->user['phone']; ?></div>
                         <div class="col-lg-1"></div>
                         <div class="col-lg-3">
                             <button id="phoneChangebtn" class="btn btn-primary" onclick="togglePhone();">Change</button>
@@ -74,7 +74,7 @@
                     </form>
 
                     <div class="row">
-                        <div class="col-lg-8">Email: sean.ga@shsu.edu</div>
+                        <div class="col-lg-8">Email: <?php echo $this->user['email']; ?></div>
                         <div class="col-lg-1"></div>
                         <div class="col-lg-3">
                             <button id="emailChangebtn" class="btn btn-primary"onclick="toggleEmail();" >Change</button>
@@ -90,7 +90,7 @@
                     </form>
 
                     <div class="row">
-                        <div class="col-lg-8">Password: ****</div>
+                        <div class="col-lg-8">Password: ********</div>
                         <div class="col-lg-1"></div>
                         <div class="col-lg-3">
                             <button id="passwordChangebtn" class="btn btn-primary" onclick="togglePassword();">Change</button>
