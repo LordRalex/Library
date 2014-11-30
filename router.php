@@ -255,7 +255,7 @@ $klein->respond('POST', '/pay', function($request, $response, $service, $app) {
     }
     try {
         $app->librarydb->prepare('INSERT INTO transactions (user, payment, description) VALUES (?,?,?)')
-                ->execute(array($_COOKIE['uuid'],$request->param('total'),'ccpayment: '.$request->param('ccnumber')));
+                ->execute(array($_COOKIE['uuid'],$request->param('total')*-1,'Payment: '.$request->param('ccnumber')));
     } catch (PDOException $ex) {
         error_log($ex->getMessage());
         echo false; 
