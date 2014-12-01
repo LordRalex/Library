@@ -28,6 +28,33 @@
             <div class="jumbotron">
                 <h2>Add Books</h2>
             </div>
+            <div class="row">
+                <div class="col-lg-1"></div>
+                <div class="col-lg-4">
+                    <h2>Existing Book</h2>
+                    <form id="ISBNinput" method="post" action="/change" role="form">
+                        ISBN: <input input name="isbn" type="text" class="form-control" placeholder="ISBN"><p></p>
+                        Quantity: <input input name="quantity" type="number" class="form-control" placeholder="Quantity"><br>
+                        <p align="center"><button class="btn btn-lg btn-primary btn-block" type="submit">Submit</button></p>
+                        <br>
+                    </form>
+                </div>
+                <div class="col-lg-2"></div>
+                <div class="col-lg-4">
+                    <h2>New Book</h2>
+                    <form class="form-register" role="form" method="post" action="/register">
+                        Title:<input name="title" type="text" class="form-control" placeholder="Title" required><p></p>
+                        ISBN: <input name ="isbn" type ="text" class ="form-control" placeholder ="ISBN" required><p></p>
+                        Author: <input name="author" type="text" class="form-control" placeholder="Author"><p></p>
+                        Genre: <input name = "genre" type = "text" class = "form-control" placeholder = "Genre" required>
+                        Quantity: <input input name="quantity" type="number" class="form-control" placeholder="Quantity"><br>
+                        Description: <textarea id="desc" name="desc" class="form-control"></textarea>
+                        <br><br>
+                        <button class="btn btn-lg btn-primary btn-block" type="submit">Submit</button>
+                    </form>
+                </div>
+                <div class="col-lg-1"></div>
+            </div>
 
             <div class="footer">
                 <p>© AE97 2014</p>
