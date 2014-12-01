@@ -16,16 +16,15 @@ $klein->respond(function($request, $response, $service, $app) {
     });
 });
 
-$klein->respond('GET', '/logout', function($request, $response, $service, $app) use ($klein) {
+$klein->respond('GET', '/logout', function($request, $response, $service, $app) {
     $uuid = $request->cookies()['uuid'];
     $response->cookie('session', null);
     $response->cookie('email', null);
     $app->librarydb->prepare("UPDATE user SET session = NULL WHERE uuid = ?")->execute(array($uuid));
     $response->redirect('/', 302)->send();
-    $klein->skipRemaining();
 });
 
-$klein->respond('GET', '/resetpw', function($request, $response, $service, $app) use ($klein) {
+$klein->respond('GET', '/resetpw', function($request, $response, $service, $app) {
     try {
         $service->validateParam('e', 'No email provided')->isEmail();
         $service->validateParam('k', 'No reset key provided');
@@ -62,10 +61,9 @@ $klein->respond('GET', '/resetpw', function($request, $response, $service, $app)
         $service->flash('Error: ' . $e->getMessage());
         $response->redirect('/login', 302);
     }
-    $klein->skipRemaining();
 });
 
-$klein->respond('GET', '/validate', function ($request, $response, $service, $app) use ($klein) {
+$klein->respond('GET', '/validate', function ($request, $response, $service, $app) {
     try {
         $service->validateParam('u', "UUID is not valid")->notNull();
         $service->validateParam('k', "Key is not valid")->notNull()->isLen(36);
@@ -93,7 +91,6 @@ $klein->respond('GET', '/validate', function ($request, $response, $service, $ap
         error_log($ex);
     }
     $response->redirect('/login', 302)->send();
-    $klein->skipRemaining();
 });
 
 $klein->respond('GET', '/bookview', function($request, $response, $service, $app) {
@@ -151,7 +148,7 @@ $klein->respond('GET', '/bookview', function($request, $response, $service, $app
     }
 });
 
-$klein->respond('GET', '/watchlist', function($request, $response, $service, $app) use ($klein) {
+$klein->respond('GET', '/watchlist', function($request, $response, $service, $app) {
     if (!isLoggedIn()) {
         $response->redirect('/login', 302)->send();
         return;
@@ -171,10 +168,9 @@ $klein->respond('GET', '/watchlist', function($request, $response, $service, $ap
     }
     $service->render("watchlist.phtml", array('books' => $db));
     $response->send();
-    $klein->skipRemaining();
 });
 
-$klein->respond('GET', '/checkedout', function($request, $response, $service, $app) use ($klein) {
+$klein->respond('GET', '/checkedout', function($request, $response, $service, $app) {
     if (!isLoggedIn()) {
         $response->redirect('/login', 302)->send();
         return;
@@ -195,10 +191,9 @@ $klein->respond('GET', '/checkedout', function($request, $response, $service, $a
     }
     $service->render("checkedout.phtml", array('books' => $db));
     $response->send();
-    $klein->skipRemaining();
 });
 
-$klein->respond('GET', '/watchlist-delete', function($request, $response, $service, $app) use ($klein) {
+$klein->respond('GET', '/watchlist-delete', function($request, $response, $service, $app) {
     if ($request->param('isbn') == null) {
         $response->redirect('/watchlist', 302)->send();
         return;
@@ -214,10 +209,9 @@ $klein->respond('GET', '/watchlist-delete', function($request, $response, $servi
         }
     }
     $response->redirect('/watchlist', 302)->send();
-    $klein->skipRemaining();
 });
 
-$klein->respond('GET', '/watchlist-add', function($request, $response, $service, $app) use ($klein) {
+$klein->respond('GET', '/watchlist-add', function($request, $response, $service, $app) {
     if ($request->param('isbn') == null) {
         $response->redirect('/watchlist', 302)->send();
         return;
@@ -233,10 +227,9 @@ $klein->respond('GET', '/watchlist-add', function($request, $response, $service,
         }
     }
     $response->redirect('/watchlist', 302)->send();
-    $klein->skipRemaining();
 });
 
-$klein->respond('GET', '/payment', function($request, $response, $service, $app) use ($klein) {
+$klein->respond('GET', '/payment', function($request, $response, $service, $app) {
     if (!isLoggedIn()) {
         $response->redirect('/login', 302)->send();
         return;
@@ -266,7 +259,6 @@ $klein->respond('GET', '/payment', function($request, $response, $service, $app)
     }
     $service->render("payment.phtml", array('total' => $total, 'history' => $history));
     $response->send();
-    $klein->skipRemaining();
 });
 
 $klein->respond('POST', '/pay', function($request, $response, $service, $app) {
@@ -289,9 +281,8 @@ $klein->respond('POST', '/pay', function($request, $response, $service, $app) {
     echo true;
 }); 
 
-$klein->respond('/admin', function($request, $response) use ($klein) {
+$klein->respond('/admin', function($request, $response) {
     $response->redirect('/admin/', 302)->send();
-    $klein->skipRemaining();
 });
 
 $klein->with('/admin', function() use ($klein) {
@@ -316,9 +307,9 @@ $klein->respond('GET', '/settings', function($request, $response, $service, $app
     }
 });
 
-$klein->respond('GET', '/', function($request, $response, $service, $app) use ($klein) {
+$klein->respond('GET', '/', function($request, $response, $service, $app) {
     $service->render("home.phtml", array('randomBook' => randBook($app)));
-    $klein->skipRemaining();
+    $response->send();
 });
 
 $klein->respond('GET', '/pay', function($request, $response, $service) {
@@ -336,6 +327,7 @@ $klein->respond('GET', '/[a:page]', function ($request, $response, $service, $ap
     } else if (file_exists($page . ".phtml")) {
         $service->render($page . ".phtml");
     }
+    $response->send();
 });
 
 $klein->respond('POST', '/login', function($request, $response, $service, $app) {

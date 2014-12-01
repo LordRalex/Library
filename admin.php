@@ -1,9 +1,8 @@
 <?php
 
-$klein->respond('*', function($request, $response, $service, $app) use ($klein) {
+$klein->respond('*', function($request, $response, $service, $app) {
     if (isLoggedIn() !== 'admin') {
         $response->redirect('/login', 302)->send();
-        $klein->skipRemaining();
     }
 });
 
