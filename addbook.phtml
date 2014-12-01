@@ -24,29 +24,42 @@
                     <li><a href="/logout">Logout</a></li>
                 </ul>
             </div>
-
-            <div class="jumbotron">
-                <h2>Add Books</h2>
-            </div>
+            <h2 class="text-center">Add Books</h2>
+            <?php
+            $flashes = $this->flashes();
+            if (count($flashes) > 0) {
+                echo '<div class="row">';
+                foreach ($flashes as $type => $messages):
+                    foreach ($messages as $msg):
+                        echo '<h5 class="alert alert-danger">' . $msg . '</h5>';
+                    endforeach;
+                endforeach;
+                echo '</div>';
+            }
+            ?>
             <div class="row">
                 <div class="col-lg-1"></div>
                 <div class="col-lg-4">
                     <h2>Existing Book</h2>
-                    <form id="ISBNinput" method="post" action="/change" role="form">
+                    <form class="form-register" method="post" action="/admin/addbook" role="form">
+                        <input hidden name="new" value="false">
                         ISBN: <input input name="isbn" type="text" class="form-control" placeholder="ISBN"><p></p>
                         Quantity: <input input name="quantity" type="number" class="form-control" placeholder="Quantity"><br>
-                        <p align="center"><button class="btn btn-lg btn-primary btn-block" type="submit">Submit</button></p>
+                        <p align="center">
+                            <button class="btn btn-lg btn-primary btn-block" type="submit">Submit</button>
+                        </p>
                         <br>
                     </form>
                 </div>
                 <div class="col-lg-2"></div>
                 <div class="col-lg-4">
                     <h2>New Book</h2>
-                    <form class="form-register" role="form" method="post" action="/register">
+                    <form class="form-register" role="form" method="post" action="/admin/addbook">
+                        <input hidden name="new" value="true">
                         Title:<input name="title" type="text" class="form-control" placeholder="Title" required><p></p>
                         ISBN: <input name ="isbn" type ="text" class ="form-control" placeholder ="ISBN" required><p></p>
                         Author: <input name="author" type="text" class="form-control" placeholder="Author"><p></p>
-                        Genre: <input name = "genre" type = "text" class = "form-control" placeholder = "Genre" required>
+                        Genre: <input name = "genres" type = "text" class = "form-control" placeholder = "Genre" required>
                         Quantity: <input input name="quantity" type="number" class="form-control" placeholder="Quantity"><br>
                         Description: <textarea id="desc" name="desc" class="form-control"></textarea>
                         <br><br>

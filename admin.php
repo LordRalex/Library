@@ -32,29 +32,40 @@ $klein->respond('GET', '/addbook', function($request, $response, $service, $app)
 
 $klein->respond('POST', '/addbook', function($request, $response, $service, $app) {
     try {
+        $service->addValidator('pos', function($str) {
+            return $str >= 0;
+        });
+
         $service->validateParam('isbn', 'No ISBN provided')->notNull();
+        $service->validateParam('quantity', 'Must be a positive quantity')->isInt()->isPos();
         $db = $app->librarydb;
         $isbn = $request->param('isbn');
-        if ($request->param('new', false)) {
+        if ($request->param('new', 'false') === 'true') {
             $service->validateParam('title', 'No book title specified')->notNull();
             $service->validateParam('desc', 'No book description provided')->notNull();
             $service->validateParam('author', 'No author specified')->notNull();
             $service->validateParam('genres', 'No genre specified')->notNull();
             $db->prepare("INSERT INTO book VALUES (?, ?, ?, ?)")
-                    ->execute(array($isbn, $request->param('title'), $request->param('desc'), $request->param('author')));
+                  ->execute(array($isbn, $request->param('title'), $request->param('desc'), $request->param('author')));
+
             $genres = explode(',', $request->param('genres'));
             foreach ($genres as $genre) {
                 $db->prepare("INSERT INTO bookgenre VALUES (?, ?)")
-                        ->execute(array($isbn, $genre));
+                      ->execute(array($isbn, $genre));
             }
-            $db->prepare("INSERT INTO bookuuid (uuid, isbn) VALUES (?, ?)")
-                    ->execute(array(getGUID(), $isbn));
+            for ($i = 0; $i < $request->param('quantity'); $i ++) {
+                $db->prepare("INSERT INTO bookuuid (uuid, isbn) VALUES (?, ?)")
+                      ->execute(array(getGUID(), $isbn));
+            }
         } else {
-            $db->prepare("INSERT INTO bookuuid (uuid, isbn) VALUES (?, ?)")
-                    ->execute(array(getGUID(), $isbn));
+            for ($i = 0; $i < $request->param('quantity'); $i ++) {
+                $db->prepare("INSERT INTO bookuuid (uuid, isbn) VALUES (?, ?)")
+                      ->execute(array(getGUID(), $isbn));
+            }
         }
+        $service->flash('Book(s) added');
     } catch (Exception $ex) {
-        $service->flash($ex->getMessage());
+        $service->flash('Could not add new book');
     }
     $service->refresh();
 });
@@ -100,13 +111,13 @@ $klein->respond('POST', '/checkout-submit', function($request, $response, $servi
         $date->modify('+2 week');
         $returnDate = $date->format('Y-m-d');
         $db->prepare('INSERT INTO checkout (bookuuid, useruuid, returndate) '
-                        . 'VALUES (?, '
-                        . '(SELECT uuid FROM user WHERE email = ?) '
-                        . ', ?)')
-                ->execute(array(
-                    $request->param('book'),
-                    $request->param('email'),
-                    $returnDate
+                    . 'VALUES (?, '
+                    . '(SELECT uuid FROM user WHERE email = ?) '
+                    . ', ?)')
+              ->execute(array(
+                  $request->param('book'),
+                  $request->param('email'),
+                  $returnDate
         ));
         $service->flash('Due date: ' . $returnDate);
     } catch (Exception $ex) {
@@ -122,11 +133,11 @@ $klein->respond('GET', '/checkin-return', function($request, $response, $service
         $date = new DateTime();
         $returnedDate = $date->format('Y-m-d');
         $db->prepare('UPDATE checkout SET returned = ?, handler = ? '
-                        . ' WHERE transaction = ?')
-                ->execute(array(
-                    $returnedDate,
-                    $_COOKIE['uuid'],
-                    $request->param('id')
+                    . ' WHERE transaction = ?')
+              ->execute(array(
+                  $returnedDate,
+                  $_COOKIE['uuid'],
+                  $request->param('id')
         ));
         $service->flash('Book returned');
     } catch (Exception $ex) {
@@ -144,9 +155,9 @@ $klein->respond('POST', '/checkin-search', function($request, $response, $servic
     try {
         $database = $app->librarydb;
         $statement = $database->prepare('SELECT transaction, bookuuid, email, returndate FROM checkout'
-                . ' INNER JOIN bookuuid ON bookuuid.uuid = checkout.bookuuid'
-                . ' INNER JOIN user ON useruuid = user.uuid '
-                . 'WHERE isbn = ? AND returned IS NULL');
+              . ' INNER JOIN bookuuid ON bookuuid.uuid = checkout.bookuuid'
+              . ' INNER JOIN user ON useruuid = user.uuid '
+              . 'WHERE isbn = ? AND returned IS NULL');
         $statement->execute(array($request->param('query')));
         $books = $statement->fetchALL(PDO::FETCH_ASSOC);
         echo json_encode(array("msg" => "success", "data" => $books));
@@ -165,12 +176,12 @@ $klein->respond('POST', '/checkout-search', function($request, $response, $servi
         $isbn = $request->param('query');
         $database = $app->librarydb;
         $statement = $database->prepare('SELECT uuid AS bookuuid FROM bookuuid '
-                . 'WHERE isbn = ? AND uuid NOT IN '
-                . '( '
-                . 'SELECT bookuuid FROM checkout '
-                . 'INNER JOIN bookuuid ON bookuuid.uuid = checkout.bookuuid '
-                . 'WHERE isbn = ? AND returned IS NULL '
-                . ')');
+              . 'WHERE isbn = ? AND uuid NOT IN '
+              . '( '
+              . 'SELECT bookuuid FROM checkout '
+              . 'INNER JOIN bookuuid ON bookuuid.uuid = checkout.bookuuid '
+              . 'WHERE isbn = ? AND returned IS NULL '
+              . ')');
         $statement->execute(array($isbn, $isbn));
         $books = $statement->fetchALL(PDO::FETCH_ASSOC);
         echo json_encode(array("msg" => "success", "data" => $books));
