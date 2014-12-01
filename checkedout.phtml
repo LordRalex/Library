@@ -32,7 +32,7 @@
                 </ul>
             </div>
             <?php if (isLoggedIn()) { ?>
-            <div class="masthead">
+                <div class="masthead">
                     <ul class="nav nav-justified">
                         <li><a href="/watchlist">Watchlist</a></li>
                         <li class="active"><a href="/checkedout">Checked Out</a></li>
@@ -44,29 +44,32 @@
             ?>
             <p></p><br>
             <div class="row">
-                <h2>Checked Out Books</h2>
+                <h2 class="text-center">Checked Out Books</h2>
             </div>
             <div class="row">
-                <table class="table table-striped ">
-                    <thead>
-                        <tr>
-                            <th id="title_column" style ="width:25%">Title</th>
-                            <th id="title_genre" style ="width:20%">Author</th>
-                            <th id="title_genre" style ="width:50%">Description</th>
-                            <th id="title_isbn" style ="width:5%">ISBN</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($this->books as $book) { ?>
-                        <tr>
-                                <td><a href="/bookview?isbn=<?php echo $book['isbn']; ?>"><?php echo $book['title']; ?></a></td>
-                                <td><p><?php echo $book['author']; ?></p></td>
-                                <td><p><?php echo $book['desc']; ?></p></td>
-                                <td><p><?php echo $book['isbn']; ?></p></td>
+                <div class="col-lg-2"></div>
+                <div class="col-lg-8">
+                    <table class="table table-striped ">
+                        <thead>
+                            <tr>
+                                <th id="title_column" style ="width:25%">Title</th>
+                                <th id="title_genre" style ="width:20%">Author</th>
+                                <th id="title_genre" style ="width:50%">Due Date</th>
+                                <th id="title_isbn" style ="width:5%">ISBN</th>
                             </tr>
-                        <?php } ?>
-                    </tbody>              
-                </table>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($this->books as $book) { ?>
+                                <tr>
+                                    <td><a href="/bookview?isbn=<?php echo $book['isbn']; ?>"><?php echo $book['title']; ?></a></td>
+                                    <td><p><?php echo $book['author']; ?></p></td>
+                                    <td><p><?php echo $book['duedate']; ?></p></td>
+                                    <td><p><?php echo $book['isbn']; ?></p></td>
+                                </tr>
+                            <?php } ?>
+                        </tbody>
+                    </table>
+                </div>
             </div>
 
             <div class="footer">

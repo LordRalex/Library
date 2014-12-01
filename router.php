@@ -174,6 +174,30 @@ $klein->respond('GET', '/watchlist', function($request, $response, $service, $ap
     $klein->skipRemaining();
 });
 
+$klein->respond('GET', '/checkedout', function($request, $response, $service, $app) use ($klein) {
+    if (!isLoggedIn()) {
+        $response->redirect('/login', 302)->send();
+        return;
+    }
+    try {
+        $statement = $app->librarydb->prepare("SELECT book.title, book.isbn, checkout.returndate AS duedate, book.author FROM book "
+                . "INNER JOIN bookuuid ON bookuuid.isbn = book.isbn "
+                . "INNER JOIN checkout ON bookuuid.uuid = checkout.bookuuid "
+                . "WHERE checkout.useruuid = ? AND returned IS NULL");
+        $statement->execute(array($request->cookies()['uuid']));
+        $statement->setFetchMode(PDO::FETCH_ASSOC);
+        $db = $statement->fetchAll();
+    } catch (Exception $e) {
+        if ($e instanceof PDOException) {
+            error_log($e);
+        }
+        $db = array();
+    }
+    $service->render("checkedout.phtml", array('books' => $db));
+    $response->send();
+    $klein->skipRemaining();
+});
+
 $klein->respond('GET', '/watchlist-delete', function($request, $response, $service, $app) use ($klein) {
     if ($request->param('isbn') == null) {
         $response->redirect('/watchlist', 302)->send();
