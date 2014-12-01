@@ -132,10 +132,15 @@ $klein->respond('GET', '/bookview', function($request, $response, $service, $app
             $inWatch = false;
         }
 
-        //$inStockStmt = $app->librarydb->prepare('SELECT count(*) AS avail FROM bookuuid WHERE isbn = ? AND checkedout = 0');
-        //$inStockStmt->execute(array($isbn));
-        //$inStock = $inStockStmt->fetch()[0];
-        $inStock = 0;
+        $inStockStmt = $app->librarydb->prepare('SELECT count(*) AS avail FROM bookuuid '
+              . 'WHERE isbn = ? AND uuid NOT IN '
+              . '( '
+              . 'SELECT bookuuid FROM checkout '
+              . 'INNER JOIN bookuuid ON bookuuid.uuid = checkout.bookuuid '
+              . 'WHERE isbn = ? AND returned IS NULL '
+              . ')');
+        $inStockStmt->execute(array($isbn, $isbn));
+        $inStock = $inStockStmt->fetch()[0];
 
         $service->render("bookview.phtml", array('book' => $output, 'inWatch' => $inWatch, 'inStock' => $inStock >= 1 ? 'Yes' : 'No'));
         $response->send();
