@@ -19,11 +19,12 @@ function parseData(data) {
     }
     viewModel.tableLoaded(true);
 }
-function searchKeyPress(e)
-    {
-        if (typeof e == 'undefined' && window.event) { e = window.event; }
-        if (e.keyCode == 13)
-        {
-            document.getElementById('searchButton').click();
-        }
+function searchKeyPress(e) {
+    if (typeof e == 'undefined' && window.event) {
+        e = window.event;
     }
+    if (e.keyCode == 13)
+    {
+        document.getElementById('searchButton').click();
+    }
+}
