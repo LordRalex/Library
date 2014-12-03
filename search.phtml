@@ -61,7 +61,7 @@
                 <h3 class="text-center" style="padding-top: 5%">Search for any book, author, genre or ISBN number</h3>
                 <div class="input-group">
                     <div class="input-group-btn">
-                        <button id="searchTypeButton" value="title" type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">Author <span class="caret"></span></button>
+                        <button id="searchTypeButton" value="author" type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">Author <span class="caret"></span></button>
                         <ul class="dropdown-menu" role="menu">
                             <li><a id="titleSearchType" class="searchTypeClass" value="title">Title</a></li>
                             <li><a id="authorSearchType" class="searchTypeClass" value="author">Author</a></li> 
@@ -103,7 +103,7 @@
 
         </div>
 
-        <script src="/assets/ie10-viewport-bug-workaround.js"></script>
+        <script src="./assets/ie10-viewport-bug-workaround.js"></script>
         <script type="text/javascript">
         ko.applyBindings(viewModel);
         </script>
